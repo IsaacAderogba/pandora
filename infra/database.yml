@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pandora-postgres-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pandora-postgres
+  template:
+    metadata:
+      labels:
+        app: pandora-postgres
+    spec:
+      volumes:
+        - name: pandora-storage
+          persistentVolumeClaim:
+            claimName: pandora-dbpvc
+      containers:
+        - name: pandora-postgres
+          image: postgres:14.1
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 375m
+              memory: 384Mi
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: pandora-storage
+              mountPath: /var/lib/postgresql/data
+              subPath: postgres
+          env:
+            - name: POSTGRES_PASSWORD
+              value: postgres
+            - name: POSTGRES_HOST_AUTH_METHOD
+              value: trust
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pandora-postgres-srv
+spec:
+  selector:
+    app: pandora-postgres
+  ports:
+    - name: db
+      protocol: TCP
+      port: 5432
+      targetPort: 5432
