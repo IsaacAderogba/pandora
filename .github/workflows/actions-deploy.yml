@@ -5,14 +5,14 @@ on:
     branches:
       - main
     paths:
-      - "packages/actions/**"
+      - "services/actions/**"
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: cd packages/actions && docker build  -t isaacaderogba/pandora-actions -f Dockerfile .
+      - run: cd services/actions && docker build  -t isaacaderogba/pandora-actions -f Dockerfile .
         env:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
       - run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD

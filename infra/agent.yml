@@ -19,7 +19,7 @@ spec:
         - name: pandora-agent-migrations
           image: isaacaderogba/pandora-agent
           command: ["yarn", "workspace", "@pandora/agent", "migrate"]
-          command: ["cd", "packages/actions", "&&", "npm", "run" "migrate"]
+          command: ["cd", "services/actions", "&&", "npm", "run" "migrate"]
           env:
             - name: POSTGRES_URL
               value: "postgresql://postgres:postgres@pandora-postgres-srv:5432/postgres"

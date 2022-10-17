@@ -5,14 +5,14 @@ on:
     branches:
       - main
     paths:
-      - "packages/agent/**"
+      - "services/agent/**"
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: cd packages/agent && docker build -t isaacaderogba/pandora-agent -f Dockerfile .
+      - run: cd services/agent && docker build -t isaacaderogba/pandora-agent -f Dockerfile .
       - run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
