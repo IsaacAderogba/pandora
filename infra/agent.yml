@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pandora-agent-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pandora-agent
+  template:
+    metadata:
+      labels:
+        app: pandora-agent
+    spec:
+      initContainers:
+        - name: pandora-agent-init
+          image: busybox
+          command: ["sh", "-c", "sleep 10"]
+        - name: pandora-agent-migrations
+          image: isaacaderogba/pandora-agent
+          command: ["yarn", "workspace", "@pandora/agent", "migrate"]
+          command: ["cd", "packages/actions", "&&", "npm", "run" "migrate"]
+          env:
+            - name: POSTGRES_URL
+              value: "postgresql://postgres:postgres@pandora-postgres-srv:5432/postgres"
+      containers:
+        - name: pandora-agent
+          image: isaacaderogba/pandora-agent
+          readinessProbe:
+            httpGet:
+                port: 3000
+                path: /health/probe
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 15
+            timeoutSeconds: 15
+          livenessProbe:
+            httpGet:
+                port: 3000
+                path: /health/probe
+            initialDelaySeconds: 120
+            periodSeconds: 10
+            failureThreshold: 2
+            timeoutSeconds: 30
+          resources:
+            requests:
+              cpu: 250m
+              memory: 384Mi
+            limits:
+              cpu: 500m
+              memory: 768Mi
+          envFrom:
+            - configMapRef:
+                name: pandora-config
+          env:
+            - name: ACTIONS_URL
+              value: "http://pandora-actions-srv:8000"
+            - name: DATABASE_URL
+              value: "postgresql://postgres:postgres@pandora-postgres-srv:5432/postgres?pool_timeout=60"
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pandora-agent-srv
+spec:
+  selector:
+    app: pandora-agent
+  ports:
+    - name: pandora-agent
+      protocol: TCP
+      port: 3000
+      targetPort: 3000
