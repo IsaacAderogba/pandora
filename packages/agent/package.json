@@ -2,10 +2,11 @@
   "name": "@iatools/pandora-agent",
   "version": "1.0.0",
   "description": "",
-  "main": "main.js",
+  "main": "dist/main.js",
   "scripts": {
     "build": "prisma generate && rm -rf dist && tsc",
     "dev": "ts-node-dev --respawn --transpile-only src/main.ts",
+    "start": "pm2-runtime dist/main.js",
     "migrate": "prisma migrate deploy"
   },
   "keywords": [],
