@@ -7,11 +7,20 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model Document {
-  id String @id @default(uuid()) @db.Uuid
+model Doc {
+  id        String                   @id @default(uuid()) @db.Uuid
+  role      DocType
+  title     String                   @db.VarChar(255)
+  vector    Unsupported("TSVECTOR")?
+  data      Json                     @db.JsonB
+  createdAt DateTime
+  updatedAt DateTime
 
-  data       Json                     @db.JsonB
-  dataVector Unsupported("TSVECTOR")?
+  @@index([vector])
+}
 
-  @@index([dataVector])
+enum DocType {
+  DATABASE
+  PAGE
+  COMMENT
 }
