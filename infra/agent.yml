@@ -20,7 +20,7 @@ spec:
           image: isaacaderogba/pandora-agent
           command: ["cd", "services/actions", "&&", "npm", "run" "migrate"]
           env:
-            - name: POSTGRES_URL
+            - name: DATABASE_URL
               value: "postgresql://postgres:postgres@pandora-postgres-srv:5432/postgres"
       containers:
         - name: pandora-agent
