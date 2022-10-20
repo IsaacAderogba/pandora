@@ -3,7 +3,7 @@ name: actions-deploy
 on:
   push:
     branches:
-      - main
+      - setup-services
     paths:
       - "services/actions/**"
 
@@ -13,8 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: cd services/actions && docker build  -t isaacaderogba/pandora-actions -f Dockerfile .
-        env:
-          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
       - run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
