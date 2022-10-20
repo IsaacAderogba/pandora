@@ -13,7 +13,7 @@ spec:
         app: pandora-agent
     spec:
       initContainers:
-        - name: pandora-agent-migrations
+        - name: pandora-agent-migration
           image: isaacaderogba/pandora-agent
           command: ["/bin/sh","-c"]
           args: ["cd services/agent && npm run migrate"]
