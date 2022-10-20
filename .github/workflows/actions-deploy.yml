@@ -3,7 +3,7 @@ name: actions-deploy
 on:
   push:
     branches:
-      - setup-services
+      - main
     paths:
       - "services/actions/**"
 

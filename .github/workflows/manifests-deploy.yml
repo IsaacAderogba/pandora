@@ -3,7 +3,7 @@ name: manifests-deploy
 on:
   push:
     branches:
-      - setup-services
+      - main
     paths:
       - "infra/**"
 

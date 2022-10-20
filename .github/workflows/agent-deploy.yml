@@ -3,7 +3,7 @@ name: agent-deploy
 on:
   push:
     branches:
-      - setup-services
+      - main
     paths:
       - "services/agent/**"
 
