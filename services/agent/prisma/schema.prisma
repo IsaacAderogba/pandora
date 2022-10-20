@@ -9,14 +9,14 @@ generator client {
 
 model Doc {
   id        String                   @id @default(uuid()) @db.Uuid
-  role      DocType
+  type      DocType
   title     String                   @db.VarChar(255)
-  vector    Unsupported("TSVECTOR")?
+  vector    Unsupported("TSVECTOR")? @default(dbgenerated())
   data      Json                     @db.JsonB
   createdAt DateTime
   updatedAt DateTime
 
-  @@index([vector])
+  @@index([vector], type: Gin)
 }
 
 enum DocType {
