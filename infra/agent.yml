@@ -13,10 +13,9 @@ spec:
         app: pandora-agent
     spec:
       initContainers:
-        - name: pandora-agent-migration
+        - name: pandora-agent-migrations
           image: isaacaderogba/pandora-agent
-          command: ["/bin/sh","-c"]
-          args: ["cd services/agent && npm run migrate"]
+          command: ["npm", "run", "migrate", "--prefix", "services/agent"]
           env:
             - name: DATABASE_URL
               value: "postgresql://postgres:postgres@pandora-postgres-srv:5432/postgres"
