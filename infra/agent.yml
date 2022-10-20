@@ -18,7 +18,6 @@ spec:
           command: ["sh", "-c", "sleep 10"]
         - name: pandora-agent-migrations
           image: isaacaderogba/pandora-agent
-          command: ["yarn", "workspace", "@pandora/agent", "migrate"]
           command: ["cd", "services/actions", "&&", "npm", "run" "migrate"]
           env:
             - name: POSTGRES_URL
