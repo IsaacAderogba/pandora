@@ -1,0 +1,25 @@
+name: actions-deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "services/actions/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: cd services/actions && docker build  -t isaacaderogba/pandora-actions -f Dockerfile .
+      - run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      - run: docker push isaacaderogba/pandora-actions
+      - uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - run: doctl kubernetes cluster kubeconfig save pandora
+      - run: kubectl rollout restart deployment pandora-actions-depl
