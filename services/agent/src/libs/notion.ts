@@ -1,23 +1,16 @@
-import { RateLimiterAbstract, RateLimiterMemory } from "rate-limiter-flexible";
 import { Client } from "@notionhq/client";
+import { RateLimiterMemory, rateLimiter } from "./rateLimiter";
 
-export interface NotionProps {
-  requestsPerSecond: number;
-}
+const limiter = new RateLimiterMemory({
+  points: 2,
+  duration: 1,
+  keyPrefix: "notion-rate-limiter",
+});
 
+@rateLimiter(limiter)
 export class Notion {
-  limiter: RateLimiterAbstract;
-  client: Client;
-
-  constructor({ requestsPerSecond }: NotionProps) {
-    this.limiter = new RateLimiterMemory({
-      points: requestsPerSecond,
-      duration: 1,
-    });
-
-    this.client = new Client({
-      auth: process.env.NOTION_SECRET,
-      notionVersion: "2022-06-28",
-    });
-  }
+  client = new Client({
+    auth: process.env.NOTION_SECRET,
+    notionVersion: "2022-06-28",
+  });
 }
