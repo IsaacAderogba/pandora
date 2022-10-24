@@ -50,6 +50,11 @@ spec:
               value: "http://pandora-actions-srv:8000"
             - name: DATABASE_URL
               value: "postgresql://postgres:postgres@pandora-postgres-srv:5432/postgres?pool_timeout=60"
+            - name: NOTION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: notion-secret
+                  key: NOTION_SECRET
 
 
 ---
