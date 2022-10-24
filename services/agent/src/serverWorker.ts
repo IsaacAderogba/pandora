@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import express, { Express } from "express";
-import { healthRouter } from "./health/router";
+import { healthRouter } from "./server/health/router";
 
 const app: Express = express();
 
