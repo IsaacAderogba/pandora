@@ -13,6 +13,7 @@ import {
   QueryDatabaseParameters,
   GetDatabaseParameters,
   ListCommentsParameters,
+  GetPageParameters,
   CommentObjectResponse,
   PaginationResult,
 } from "./types";
@@ -25,7 +26,7 @@ class Notion {
   });
 
   @rateLimit(1)
-  async databasesSearch(
+  async databaseSearch(
     params: Omit<SearchParameters, "filter"> = {}
   ): Promise<PaginationResult<DatabaseObjectResponse>> {
     const { results, next_cursor } = await this.client.search({
@@ -40,7 +41,7 @@ class Notion {
   }
 
   @rateLimit(1)
-  async databasesRetrieve(
+  async databaseRetrieve(
     params: GetDatabaseParameters
   ): Promise<DatabaseObjectResponse> {
     const result = await this.client.databases.retrieve(params);
@@ -52,7 +53,7 @@ class Notion {
   }
 
   @rateLimit(1)
-  async databasesQuery(
+  async databaseQuery(
     params: QueryDatabaseParameters
   ): Promise<PaginationResult<PageObjectResponse>> {
     const { results, next_cursor } = await this.client.databases.query(params);
@@ -63,7 +64,17 @@ class Notion {
   }
 
   @rateLimit(1)
-  async commentsList(
+  async pageRetrieve(params: GetPageParameters): Promise<PageObjectResponse> {
+    const result = await this.client.pages.retrieve(params);
+    if (!isPageObjectResponse(result)) {
+      throw this.error("Expected page response object");
+    }
+
+    return result;
+  }
+
+  @rateLimit(1)
+  async commentList(
     params: ListCommentsParameters
   ): Promise<PaginationResult<CommentObjectResponse>> {
     const { results, next_cursor } = await this.client.comments.list(params);

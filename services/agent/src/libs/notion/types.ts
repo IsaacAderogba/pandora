@@ -27,5 +27,7 @@ export type {
   SearchParameters,
   QueryDatabaseParameters,
   GetDatabaseParameters,
+  GetPageParameters,
+  GetPagePropertyParameters,
   ListCommentsParameters,
 } from "@notionhq/client/build/src/api-endpoints";
