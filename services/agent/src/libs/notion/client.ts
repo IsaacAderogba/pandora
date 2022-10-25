@@ -1,5 +1,6 @@
 import { Client } from "@notionhq/client";
-import { RateLimiterMemory, rateLimiter, rateLimit } from "../rateLimiter";
+import { rateLimiter, rateLimit } from "../rateLimiter";
+import { notionLimiter } from "./limiter";
 import {
   isCommentObjectResponse,
   isDatabaseObjectResponse,
@@ -16,13 +17,7 @@ import {
   PaginationResult,
 } from "./types";
 
-const limiter = new RateLimiterMemory({
-  points: 1,
-  duration: 1,
-  keyPrefix: "notion-rate-limiter",
-});
-
-@rateLimiter(limiter)
+@rateLimiter(notionLimiter)
 class Notion {
   client = new Client({
     auth: process.env.NOTION_SECRET,
