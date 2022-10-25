@@ -2,6 +2,7 @@ import { Client } from "@notionhq/client";
 import { rateLimiter, rateLimit } from "../rateLimiter";
 import { notionLimiter } from "./limiter";
 import {
+  isBlockObjectResponse,
   isCommentObjectResponse,
   isDatabaseObjectResponse,
   isPageObjectResponse,
@@ -9,10 +10,12 @@ import {
 import {
   DatabaseObjectResponse,
   PageObjectResponse,
+  BlockObjectResponse,
   SearchParameters,
   QueryDatabaseParameters,
   GetDatabaseParameters,
   ListCommentsParameters,
+  ListBlockChildrenParameters,
   GetPageParameters,
   GetPagePropertyParameters,
   CommentObjectResponse,
@@ -80,6 +83,20 @@ class Notion {
     params: GetPagePropertyParameters
   ): Promise<GetPagePropertyResponse> {
     return await this.client.pages.properties.retrieve(params);
+  }
+
+  @rateLimit(1)
+  async blockList(
+    params: ListBlockChildrenParameters
+  ): Promise<PaginationResult<BlockObjectResponse>> {
+    const { results, next_cursor } = await this.client.blocks.children.list(
+      params
+    );
+
+    return {
+      results: results.filter(isBlockObjectResponse),
+      next: next_cursor,
+    };
   }
 
   @rateLimit(1)
