@@ -1,7 +1,12 @@
 import { Client } from "@notionhq/client";
 import { RateLimiterMemory, rateLimiter, rateLimit } from "../rateLimiter";
-import { isDatabaseObjectResponse } from "./narrowings";
-import { DatabaseObjectResponse, SearchParameters } from "./types";
+import { isDatabaseObjectResponse, isPageObjectResponse } from "./narrowings";
+import {
+  DatabaseObjectResponse,
+  PageObjectResponse,
+  SearchParameters,
+  QueryDatabaseParameters,
+} from "./types";
 
 const limiter = new RateLimiterMemory({
   points: 1,
@@ -17,15 +22,33 @@ class Notion {
   });
 
   @rateLimit(1)
-  async searchDatabases(
+  async databasesSearch(
     params: Omit<SearchParameters, "filter"> = {}
-  ): Promise<DatabaseObjectResponse[]> {
-    const { results } = await this.client.search({
+  ): Promise<{
+    results: DatabaseObjectResponse[];
+    next: string | null;
+  }> {
+    const { results, next_cursor } = await this.client.search({
       ...params,
       filter: { property: "object", value: "database" },
     });
 
-    return results.filter(isDatabaseObjectResponse);
+    return {
+      results: results.filter(isDatabaseObjectResponse),
+      next: next_cursor,
+    };
+  }
+
+  @rateLimit(1)
+  async databasesQuery(params: QueryDatabaseParameters): Promise<{
+    results: PageObjectResponse[];
+    next: string | null;
+  }> {
+    const { results, next_cursor } = await this.client.databases.query(params);
+    return {
+      results: results.filter(isPageObjectResponse),
+      next: next_cursor,
+    };
   }
 }
 

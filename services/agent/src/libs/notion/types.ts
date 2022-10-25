@@ -17,4 +17,7 @@ export type { PageResponse, PageObjectResponse, PartialPageObjectResponse };
 
 export type NotionResponse = DatabaseResponse | PageResponse;
 
-export type { SearchParameters } from "@notionhq/client/build/src/api-endpoints";
+export type {
+  SearchParameters,
+  QueryDatabaseParameters,
+} from "@notionhq/client/build/src/api-endpoints";
