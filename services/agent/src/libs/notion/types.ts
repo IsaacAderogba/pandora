@@ -3,6 +3,8 @@ import {
   PageObjectResponse,
   PartialDatabaseObjectResponse,
   PartialPageObjectResponse,
+  CommentObjectResponse,
+  PartialCommentObjectResponse,
 } from "@notionhq/client/build/src/api-endpoints";
 
 type DatabaseResponse = DatabaseObjectResponse | PartialDatabaseObjectResponse;
@@ -11,10 +13,14 @@ export type { DatabaseResponse, DatabaseObjectResponse };
 type PageResponse = PageObjectResponse | PartialPageObjectResponse;
 export type { PageResponse, PageObjectResponse };
 
-export type NotionResponse = DatabaseResponse | PageResponse;
+type CommentResponse = CommentObjectResponse | PartialCommentObjectResponse;
+export type { CommentResponse, CommentObjectResponse };
+
+export type NotionResponse = DatabaseResponse | PageResponse | CommentResponse;
 
 export type {
   SearchParameters,
   QueryDatabaseParameters,
   GetDatabaseParameters,
+  ListCommentsParameters,
 } from "@notionhq/client/build/src/api-endpoints";

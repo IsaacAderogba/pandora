@@ -1,12 +1,18 @@
 import { Client } from "@notionhq/client";
 import { RateLimiterMemory, rateLimiter, rateLimit } from "../rateLimiter";
-import { isDatabaseObjectResponse, isPageObjectResponse } from "./narrowings";
+import {
+  isCommentObjectResponse,
+  isDatabaseObjectResponse,
+  isPageObjectResponse,
+} from "./narrowings";
 import {
   DatabaseObjectResponse,
   PageObjectResponse,
   SearchParameters,
   QueryDatabaseParameters,
   GetDatabaseParameters,
+  ListCommentsParameters,
+  CommentObjectResponse,
 } from "./types";
 
 const limiter = new RateLimiterMemory({
@@ -46,7 +52,7 @@ class Notion {
   ): Promise<DatabaseObjectResponse> {
     const result = await this.client.databases.retrieve(params);
     if (!isDatabaseObjectResponse(result)) {
-      throw this.error(`Expected database object`);
+      throw this.error("Expected database response object");
     }
 
     return result;
@@ -60,6 +66,18 @@ class Notion {
     const { results, next_cursor } = await this.client.databases.query(params);
     return {
       results: results.filter(isPageObjectResponse),
+      next: next_cursor,
+    };
+  }
+
+  @rateLimit(1)
+  async commentsList(params: ListCommentsParameters): Promise<{
+    results: CommentObjectResponse[];
+    next: string | null;
+  }> {
+    const { results, next_cursor } = await this.client.comments.list(params);
+    return {
+      results: results.filter(isCommentObjectResponse),
       next: next_cursor,
     };
   }
