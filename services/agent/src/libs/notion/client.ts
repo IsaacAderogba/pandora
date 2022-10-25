@@ -14,8 +14,10 @@ import {
   GetDatabaseParameters,
   ListCommentsParameters,
   GetPageParameters,
+  GetPagePropertyParameters,
   CommentObjectResponse,
   PaginationResult,
+  GetPagePropertyResponse,
 } from "./types";
 
 @rateLimiter(notionLimiter)
@@ -71,6 +73,13 @@ class Notion {
     }
 
     return result;
+  }
+
+  @rateLimit(1)
+  async propertyRetrieve(
+    params: GetPagePropertyParameters
+  ): Promise<GetPagePropertyResponse> {
+    return await this.client.pages.properties.retrieve(params);
   }
 
   @rateLimit(1)

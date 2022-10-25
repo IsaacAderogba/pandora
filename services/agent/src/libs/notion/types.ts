@@ -30,4 +30,5 @@ export type {
   GetPageParameters,
   GetPagePropertyParameters,
   ListCommentsParameters,
+  GetPagePropertyResponse,
 } from "@notionhq/client/build/src/api-endpoints";
