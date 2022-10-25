@@ -2,17 +2,19 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import cluster from "node:cluster";
-import { startNotionSyncWorker } from "./notionSyncWorker";
-import { startServer } from "./serverWorker";
+import { syncFromNotion } from "./syncFromNotion";
+import { startServer } from "./server";
 
 enum Worker {
   Server = "Server",
-  NotionSync = "NotionSync",
+  SyncFromNotion = "SyncFromNotion",
+  SyncToNotion = "SyncToNotion",
+  SyncFromReadwiseToNotion = "SyncFromReadwiseToNotion",
 }
 
 if (cluster.isPrimary) {
   cluster.fork({ WORKER: Worker.Server });
-  cluster.fork({ WORKER: Worker.NotionSync });
+  cluster.fork({ WORKER: Worker.SyncFromNotion });
 
   cluster.on("disconnect", () => process.exit(1));
 } else {
@@ -22,8 +24,8 @@ if (cluster.isPrimary) {
     case Worker.Server:
       startServer();
       break;
-    case Worker.NotionSync:
-      startNotionSyncWorker();
+    case Worker.SyncFromNotion:
+      syncFromNotion();
       break;
   }
 }
