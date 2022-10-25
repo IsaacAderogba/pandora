@@ -31,7 +31,7 @@ class Notion {
   });
 
   @rateLimit(1)
-  async databaseSearch(
+  async databaseList(
     params: Omit<SearchParameters, "filter"> = {}
   ): Promise<PaginationResult<DatabaseObjectResponse>> {
     const { results, next_cursor } = await this.client.search({
@@ -58,7 +58,7 @@ class Notion {
   }
 
   @rateLimit(1)
-  async databaseQuery(
+  async pageList(
     params: QueryDatabaseParameters
   ): Promise<PaginationResult<PageObjectResponse>> {
     const { results, next_cursor } = await this.client.databases.query(params);
