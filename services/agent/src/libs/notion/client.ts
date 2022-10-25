@@ -13,6 +13,7 @@ import {
   GetDatabaseParameters,
   ListCommentsParameters,
   CommentObjectResponse,
+  PaginationResult,
 } from "./types";
 
 const limiter = new RateLimiterMemory({
@@ -31,10 +32,7 @@ class Notion {
   @rateLimit(1)
   async databasesSearch(
     params: Omit<SearchParameters, "filter"> = {}
-  ): Promise<{
-    results: DatabaseObjectResponse[];
-    next: string | null;
-  }> {
+  ): Promise<PaginationResult<DatabaseObjectResponse>> {
     const { results, next_cursor } = await this.client.search({
       ...params,
       filter: { property: "object", value: "database" },
@@ -59,10 +57,9 @@ class Notion {
   }
 
   @rateLimit(1)
-  async databasesQuery(params: QueryDatabaseParameters): Promise<{
-    results: PageObjectResponse[];
-    next: string | null;
-  }> {
+  async databasesQuery(
+    params: QueryDatabaseParameters
+  ): Promise<PaginationResult<PageObjectResponse>> {
     const { results, next_cursor } = await this.client.databases.query(params);
     return {
       results: results.filter(isPageObjectResponse),
@@ -71,10 +68,9 @@ class Notion {
   }
 
   @rateLimit(1)
-  async commentsList(params: ListCommentsParameters): Promise<{
-    results: CommentObjectResponse[];
-    next: string | null;
-  }> {
+  async commentsList(
+    params: ListCommentsParameters
+  ): Promise<PaginationResult<CommentObjectResponse>> {
     const { results, next_cursor } = await this.client.comments.list(params);
     return {
       results: results.filter(isCommentObjectResponse),

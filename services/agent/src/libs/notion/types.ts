@@ -18,6 +18,11 @@ export type { CommentResponse, CommentObjectResponse };
 
 export type NotionResponse = DatabaseResponse | PageResponse | CommentResponse;
 
+export type PaginationResult<T> = {
+  results: T[];
+  next: string | null;
+};
+
 export type {
   SearchParameters,
   QueryDatabaseParameters,
