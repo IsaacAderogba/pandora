@@ -1,5 +1,27 @@
-import path from "path";
-import { Worker } from "worker_threads";
+import dotenv from "dotenv";
+dotenv.config();
 
-new Worker(path.join(__dirname, "serverWorker.ts"));
-new Worker(path.join(__dirname, "notionSyncWorker.ts"));
+import cluster from "node:cluster";
+import { startNotionSyncWorker } from "./notionSyncWorker";
+import { startServer } from "./serverWorker";
+
+enum Worker {
+  Server = "Server",
+  NotionSync = "NotionSync",
+}
+
+if (cluster.isPrimary) {
+  cluster.fork({ WORKER: Worker.Server });
+  cluster.fork({ WORKER: Worker.NotionSync });
+} else {
+  const worker = process.env.WORKER;
+
+  switch (worker) {
+    case Worker.Server:
+      startServer();
+      break;
+    case Worker.NotionSync:
+      startNotionSyncWorker();
+      break;
+  }
+}
