@@ -1,11 +1,9 @@
 import { notion } from "./libs/notion";
 
 export const startNotionSyncWorker = () => {
-  notion.test();
-  notion.test();
-  notion.test();
-  notion.test();
-  notion.test();
-  notion.test();
-  notion.test();
+  const one = notion.test(0);
+  const two = notion.test(one);
+  const three = notion.test(two);
+  const four = notion.test(three);
+  notion.test(four);
 };
