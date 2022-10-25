@@ -13,6 +13,8 @@ enum Worker {
 if (cluster.isPrimary) {
   cluster.fork({ WORKER: Worker.Server });
   cluster.fork({ WORKER: Worker.NotionSync });
+
+  cluster.on("disconnect", () => process.exit(1));
 } else {
   const worker = process.env.WORKER;
 
