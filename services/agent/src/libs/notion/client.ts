@@ -6,6 +6,7 @@ import {
   PageObjectResponse,
   SearchParameters,
   QueryDatabaseParameters,
+  GetDatabaseParameters,
 } from "./types";
 
 const limiter = new RateLimiterMemory({
@@ -40,6 +41,18 @@ class Notion {
   }
 
   @rateLimit(1)
+  async databasesRetrieve(
+    params: GetDatabaseParameters
+  ): Promise<DatabaseObjectResponse> {
+    const result = await this.client.databases.retrieve(params);
+    if (!isDatabaseObjectResponse(result)) {
+      throw this.error(`Expected database object`);
+    }
+
+    return result;
+  }
+
+  @rateLimit(1)
   async databasesQuery(params: QueryDatabaseParameters): Promise<{
     results: PageObjectResponse[];
     next: string | null;
@@ -49,6 +62,10 @@ class Notion {
       results: results.filter(isPageObjectResponse),
       next: next_cursor,
     };
+  }
+
+  private error(message: string) {
+    return new Error(message);
   }
 }
 
