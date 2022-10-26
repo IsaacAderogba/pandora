@@ -10,6 +10,10 @@ export const syncFromNotion = async () => {
       const pages = await notion.pageListAll({ database_id: db.id });
       for (const page of pages) {
         console.log(`[page-sync]: ${$pageTitle(page)}`);
+
+        /**
+         * For each page, I need to grab the properties
+         */
       }
     }
   }

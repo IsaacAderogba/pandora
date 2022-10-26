@@ -23,4 +23,5 @@ enum DocType {
   DATABASE
   PAGE
   COMMENT
+  BLOCK
 }
