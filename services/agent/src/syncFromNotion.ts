@@ -1,6 +1,8 @@
 import { notion } from "./libs/notion/client";
-import { $databaseDoc, $pageDoc } from "./libs/notion/selectors";
+import { $commentDoc, $databaseDoc, $pageDoc } from "./libs/notion/selectors";
 import {
+  CommentDoc,
+  CommentObjectResponse,
   DatabaseDoc,
   DatabaseObjectResponse,
   PageDoc,
@@ -15,8 +17,15 @@ export const syncFromNotion = async () => {
 
       for (const page of await notion.pageListAll({ database_id: dbDoc.id })) {
         const pageDoc = await upsertPage(page);
+        await syncDocumentTree(pageDoc.id);
       }
     }
+  }
+};
+
+const syncDocumentTree = async (id: string): Promise<void> => {
+  for (const comment of await notion.commentListAll({ block_id: id })) {
+    await upsertComment(comment);
   }
 };
 
@@ -26,7 +35,10 @@ const upsertDatabase = async (db: DatabaseObjectResponse) =>
 const upsertPage = async (page: PageObjectResponse) =>
   upsertDoc($pageDoc(page));
 
-const upsertDoc = async <T extends DatabaseDoc | PageDoc>(
+const upsertComment = async (comment: CommentObjectResponse) =>
+  upsertDoc($commentDoc(comment));
+
+const upsertDoc = async <T extends DatabaseDoc | PageDoc | CommentDoc>(
   doc: T
 ): Promise<T> => {
   await prisma.doc.upsert({

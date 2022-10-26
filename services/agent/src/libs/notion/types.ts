@@ -22,7 +22,8 @@ type BlockResponse = BlockObjectResponse | PartialBlockObjectResponse;
 export type { BlockResponse, BlockObjectResponse };
 
 type CommentResponse = CommentObjectResponse | PartialCommentObjectResponse;
-export type { CommentResponse, CommentObjectResponse };
+type CommentDoc = Doc & { data: CommentObjectResponse };
+export type { CommentDoc, CommentResponse, CommentObjectResponse };
 
 export type NotionResponse =
   | DatabaseResponse

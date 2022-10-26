@@ -1,10 +1,12 @@
 import { DocType } from "@prisma/client";
 import { isPageTitleProperty } from "./narrowings";
 import {
+  CommentDoc,
   DatabaseDoc,
   DatabaseObjectResponse,
   PageDoc,
   PageObjectResponse,
+  CommentObjectResponse,
 } from "./types";
 
 // database selectors
@@ -42,6 +44,23 @@ export const $pageTitle = (page: PageObjectResponse) => {
     .filter(isPageTitleProperty)
     .map(({ title }) => title.map(({ plain_text }) => plain_text).join(""))
     .join("");
+};
+
+// comment selectors
+export const $commentDoc = (comment: CommentObjectResponse): CommentDoc => {
+  return {
+    id: comment.id,
+    parentId: $parentId(comment.parent),
+    type: DocType.COMMENT,
+    title: $commentTitle(comment),
+    data: comment,
+    createdAt: new Date(comment.created_time),
+    updatedAt: new Date(comment.last_edited_time),
+  };
+};
+
+export const $commentTitle = (comment: CommentObjectResponse) => {
+  return comment.rich_text.map(({ plain_text }) => plain_text).join("");
 };
 
 // shared
