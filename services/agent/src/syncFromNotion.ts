@@ -17,13 +17,22 @@ import {
 } from "./libs/notion/types";
 import { prisma } from "./libs/prisma";
 
+/**
+ * What's the proper way to retry
+ * try catch at root
+ * try catch at page
+ * // there's actually three level of errors
+ */
+
 export const syncFromNotion = async () => {
   while (true) {
-    for (const db of await notion.databaseListAll()) {
+    const databases = await notion.databaseListAll();
+    for (const db of databases) {
       const dbDoc = await upsertDatabase(db);
 
-      for (const page of await notion.pageListAll({ database_id: dbDoc.id })) {
-        await syncDocumentTree(page.id, async (commentIds, blockIds) => {
+      const pages = await notion.pageListAll({ database_id: dbDoc.id });
+      for (const page of pages) {
+        await syncTree(page.id, async (commentIds, blockIds) => {
           await upsertPage(page, { commentIds, blockIds });
         });
       }
@@ -31,7 +40,7 @@ export const syncFromNotion = async () => {
   }
 };
 
-const syncDocumentTree = async (
+const syncTree = async (
   id: string,
   onSave: (commentIds: string[], blockIds: string[]) => Promise<void>
 ): Promise<void> => {
@@ -47,7 +56,7 @@ const syncDocumentTree = async (
   }
 
   for (const block of blocks) {
-    await syncDocumentTree(block.id, async (commentIds, blockIds) => {
+    await syncTree(block.id, async (commentIds, blockIds) => {
       await upsertBlock(block, { commentIds, blockIds });
     });
   }
@@ -79,6 +88,9 @@ const upsertDoc = async <
     create: doc,
     update: doc,
   });
-  console.log(`[${doc.type.toLowerCase()}-upserted]: ${doc.title}`);
+
+  const header = `[${doc.type.toLowerCase()}-upserted]`;
+  const label = `${new Date().toISOString()} ${doc.title}`;
+  console.log(`${header}: ${label}`);
   return doc;
 };
