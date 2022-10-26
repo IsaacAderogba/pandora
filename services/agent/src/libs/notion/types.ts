@@ -8,9 +8,11 @@ import {
   BlockObjectResponse,
   PartialBlockObjectResponse,
 } from "@notionhq/client/build/src/api-endpoints";
+import { Doc } from "@prisma/client";
 
 type DatabaseResponse = DatabaseObjectResponse | PartialDatabaseObjectResponse;
-export type { DatabaseResponse, DatabaseObjectResponse };
+type DatabaseDoc = Doc & { data: DatabaseObjectResponse };
+export type { DatabaseDoc, DatabaseResponse, DatabaseObjectResponse };
 
 type PageResponse = PageObjectResponse | PartialPageObjectResponse;
 export type { PageResponse, PageObjectResponse };
@@ -44,4 +46,3 @@ export type {
 } from "@notionhq/client/build/src/api-endpoints";
 
 // properties
-
