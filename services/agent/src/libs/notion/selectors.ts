@@ -31,14 +31,17 @@ export const $databaseTitle = (database: DatabaseObjectResponse) => {
 };
 
 // page selectors
-export const $pageDoc = (page: PageObjectResponse): PageDoc => {
+export const $pageDoc = (
+  page: PageObjectResponse,
+  metadata: PageDoc["metadata"]
+): PageDoc => {
   return {
     id: page.id,
     parentId: $parentId(page.parent),
     type: DocType.PAGE,
     title: $pageTitle(page),
     data: page,
-    metadata: {},
+    metadata,
     createdAt: new Date(page.created_time),
     updatedAt: new Date(page.last_edited_time),
   };
@@ -52,17 +55,14 @@ export const $pageTitle = (page: PageObjectResponse) => {
 };
 
 // comment selectors
-export const $commentDoc = (
-  comment: CommentObjectResponse,
-  metadata: CommentDoc["metadata"]
-): CommentDoc => {
+export const $commentDoc = (comment: CommentObjectResponse): CommentDoc => {
   return {
     id: comment.id,
     parentId: $parentId(comment.parent),
     type: DocType.COMMENT,
     title: $commentTitle(comment),
     data: comment,
-    metadata,
+    metadata: {},
     createdAt: new Date(comment.created_time),
     updatedAt: new Date(comment.last_edited_time),
   };

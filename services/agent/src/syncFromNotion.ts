@@ -1,7 +1,13 @@
 import { notion } from "./libs/notion/client";
-import { $commentDoc, $databaseDoc, $pageDoc } from "./libs/notion/selectors";
+import {
+  $blockDoc,
+  $commentDoc,
+  $databaseDoc,
+  $pageDoc,
+} from "./libs/notion/selectors";
 import {
   BlockDoc,
+  BlockObjectResponse,
   CommentDoc,
   CommentObjectResponse,
   DatabaseDoc,
@@ -17,35 +23,51 @@ export const syncFromNotion = async () => {
       const dbDoc = await upsertDatabase(db);
 
       for (const page of await notion.pageListAll({ database_id: dbDoc.id })) {
-        const pageDoc = await upsertPage(page);
-        await syncDocumentTree(pageDoc.id);
+        await syncDocumentTree(page.id, async (commentIds, blockIds) => {
+          await upsertPage(page, { commentIds, blockIds });
+        });
       }
     }
   }
 };
 
-const syncDocumentTree = async (id: string): Promise<void> => {
+const syncDocumentTree = async (
+  id: string,
+  onSave: (commentIds: string[], blockIds: string[]) => Promise<void>
+): Promise<void> => {
   const comments = await notion.commentListAll({ block_id: id });
-  for (const [order, comment] of comments.entries()) {
-    await upsertComment(comment, { order });
+  const blocks = await notion.blockListAll({ block_id: id });
+  await onSave(
+    comments.map((c) => c.id),
+    blocks.map((b) => b.id)
+  );
+
+  for (const comment of comments) {
+    await upsertComment(comment);
   }
 
-  const blocks = await notion.blockListAll({ block_id: id });
-  // for (const [order, block] of blocks.entries()) {
-  //   await upsertBlock(block, { order });
-  // }
+  for (const block of blocks) {
+    await syncDocumentTree(block.id, async (commentIds, blockIds) => {
+      await upsertBlock(block, { commentIds, blockIds });
+    });
+  }
 };
 
 const upsertDatabase = async (db: DatabaseObjectResponse) =>
   upsertDoc($databaseDoc(db));
 
-const upsertPage = async (page: PageObjectResponse) =>
-  upsertDoc($pageDoc(page));
+const upsertPage = async (
+  page: PageObjectResponse,
+  metadata: PageDoc["metadata"]
+) => upsertDoc($pageDoc(page, metadata));
 
-const upsertComment = async (
-  comment: CommentObjectResponse,
-  metadata: CommentDoc["metadata"]
-) => upsertDoc($commentDoc(comment, metadata));
+const upsertBlock = async (
+  block: BlockObjectResponse,
+  metadata: BlockDoc["metadata"]
+) => upsertDoc($blockDoc(block, metadata));
+
+const upsertComment = async (comment: CommentObjectResponse) =>
+  upsertDoc($commentDoc(comment));
 
 const upsertDoc = async <
   T extends DatabaseDoc | PageDoc | CommentDoc | BlockDoc

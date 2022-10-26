@@ -15,15 +15,21 @@ type DatabaseDoc = Document<DatabaseObjectResponse>;
 export type { DatabaseDoc, DatabaseResponse, DatabaseObjectResponse };
 
 type PageResponse = PageObjectResponse | PartialPageObjectResponse;
-type PageDoc = Document<PageObjectResponse>;
+type PageDoc = Document<
+  PageObjectResponse,
+  { commentIds: string[]; blockIds: string[] }
+>;
 export type { PageDoc, PageResponse, PageObjectResponse };
 
 type BlockResponse = BlockObjectResponse | PartialBlockObjectResponse;
-type BlockDoc = Document<BlockObjectResponse, { order: number }>;
+type BlockDoc = Document<
+  BlockObjectResponse,
+  { commentIds: string[]; blockIds: string[] }
+>;
 export type { BlockDoc, BlockResponse, BlockObjectResponse };
 
 type CommentResponse = CommentObjectResponse | PartialCommentObjectResponse;
-type CommentDoc = Document<CommentObjectResponse, { order: number }>;
+type CommentDoc = Document<CommentObjectResponse>;
 
 export type { CommentDoc, CommentResponse, CommentObjectResponse };
 
