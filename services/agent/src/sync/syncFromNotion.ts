@@ -1,25 +1,8 @@
+import { upsertBlock } from "../documents/block";
+import { upsertComment } from "../documents/comment";
+import { upsertDatabase } from "../documents/database";
+import { upsertPage } from "../documents/page";
 import { notion } from "../libs/notion/client";
-import {
-  $blockDoc,
-  $commentDoc,
-  $databaseDoc,
-  $pageDoc,
-} from "../libs/notion/selectors";
-import {
-  BlockDoc,
-  BlockObjectResponse,
-  CommentDoc,
-  CommentObjectResponse,
-  DatabaseDoc,
-  DatabaseObjectResponse,
-  PageDoc,
-  PageObjectResponse,
-} from "../libs/notion/types";
-import { prisma } from "../libs/prisma";
-
-class SyncFromNotion {
-  
-}
 
 export const syncFromNotion = async () => {
   while (true) {
@@ -57,37 +40,4 @@ const syncTree = async (
       await upsertBlock(block, { commentIds, blockIds });
     });
   }
-};
-
-const upsertDatabase = async (db: DatabaseObjectResponse) =>
-  upsertDoc($databaseDoc(db));
-
-const upsertPage = async (
-  page: PageObjectResponse,
-  metadata: PageDoc["metadata"]
-) => upsertDoc($pageDoc(page, metadata));
-
-const upsertBlock = async (
-  block: BlockObjectResponse,
-  metadata: BlockDoc["metadata"]
-) => upsertDoc($blockDoc(block, metadata));
-
-const upsertComment = async (comment: CommentObjectResponse) =>
-  upsertDoc($commentDoc(comment));
-
-const upsertDoc = async <
-  T extends DatabaseDoc | PageDoc | CommentDoc | BlockDoc
->(
-  doc: T
-): Promise<T> => {
-  await prisma.doc.upsert({
-    where: { id: doc.id },
-    create: doc,
-    update: doc,
-  });
-
-  const header = `[${doc.type.toLowerCase()}-upserted]`;
-  const label = `${new Date().toISOString()} ${doc.title}`;
-  console.log(`${header}: ${label}`);
-  return doc;
 };
