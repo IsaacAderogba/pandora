@@ -1,5 +1,5 @@
 import { notion } from "./libs/notion/client";
-import { $databaseTitle } from "./libs/notion/selectors";
+import { $databaseTitle, $pageTitle } from "./libs/notion/selectors";
 
 export const syncFromNotion = async () => {
   while (true) {
@@ -9,6 +9,7 @@ export const syncFromNotion = async () => {
 
       const pages = await notion.pageListAll({ database_id: db.id });
       for (const page of pages) {
+        console.log(`[page-sync]: ${$pageTitle(page)}`);
       }
     }
   }

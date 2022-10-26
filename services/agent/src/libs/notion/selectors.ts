@@ -1,3 +1,4 @@
+import { isPageTitleProperty } from "./narrowings";
 import { DatabaseObjectResponse, PageObjectResponse } from "./types";
 
 // database selectors
@@ -8,6 +9,6 @@ export const $databaseTitle = (database: DatabaseObjectResponse) => {
 // page selectors
 export const $pageTitle = (page: PageObjectResponse) => {
   return Object.values(page.properties)
-    .filter((prop) => prop.type === "title")
-    .map((title) => {});
+    .filter(isPageTitleProperty)
+    .map(({ title }) => title.map(({ plain_text }) => plain_text).join(""));
 };

@@ -1,3 +1,4 @@
+import { TitleProperty } from "./properties";
 import {
   DatabaseObjectResponse,
   PageObjectResponse,
@@ -45,3 +46,7 @@ export const isCommentObjectResponse = (
 
   return false;
 };
+
+export const isPageTitleProperty = (
+  prop: PageObjectResponse["properties"][""]
+): prop is TitleProperty => prop.type === "title";
