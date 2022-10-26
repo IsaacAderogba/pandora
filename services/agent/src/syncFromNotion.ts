@@ -25,14 +25,15 @@ export const syncFromNotion = async () => {
 };
 
 const syncDocumentTree = async (id: string): Promise<void> => {
-  for (const comment of await notion.commentListAll({ block_id: id })) {
-    await upsertComment(comment);
+  const comments = await notion.commentListAll({ block_id: id });
+  for (const [order, comment] of comments.entries()) {
+    await upsertComment(comment, { order });
   }
 
-  for (const block of await notion.blockListAll({ block_id: id })) {
-    // upsert block
-    //
-  }
+  const blocks = await notion.blockListAll({ block_id: id });
+  // for (const [order, block] of blocks.entries()) {
+  //   await upsertBlock(block, { order });
+  // }
 };
 
 const upsertDatabase = async (db: DatabaseObjectResponse) =>
@@ -41,8 +42,10 @@ const upsertDatabase = async (db: DatabaseObjectResponse) =>
 const upsertPage = async (page: PageObjectResponse) =>
   upsertDoc($pageDoc(page));
 
-const upsertComment = async (comment: CommentObjectResponse) =>
-  upsertDoc($commentDoc(comment));
+const upsertComment = async (
+  comment: CommentObjectResponse,
+  metadata: CommentDoc["metadata"]
+) => upsertDoc($commentDoc(comment, metadata));
 
 const upsertDoc = async <
   T extends DatabaseDoc | PageDoc | CommentDoc | BlockDoc

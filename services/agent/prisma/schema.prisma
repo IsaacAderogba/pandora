@@ -17,6 +17,7 @@ model Doc {
   title     String                   @db.VarChar(255)
   vector    Unsupported("TSVECTOR")? @default(dbgenerated())
   data      Json                     @db.JsonB
+  metadata  Json                     @default("{}") @db.JsonB
   createdAt DateTime
   updatedAt DateTime
 

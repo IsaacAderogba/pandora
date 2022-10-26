@@ -11,20 +11,26 @@ import {
 import { Doc } from "@prisma/client";
 
 type DatabaseResponse = DatabaseObjectResponse | PartialDatabaseObjectResponse;
-type DatabaseDoc = Doc & { data: DatabaseObjectResponse };
+type DatabaseDoc = Document<DatabaseObjectResponse>;
 export type { DatabaseDoc, DatabaseResponse, DatabaseObjectResponse };
 
 type PageResponse = PageObjectResponse | PartialPageObjectResponse;
-type PageDoc = Doc & { data: PageObjectResponse };
+type PageDoc = Document<PageObjectResponse>;
 export type { PageDoc, PageResponse, PageObjectResponse };
 
 type BlockResponse = BlockObjectResponse | PartialBlockObjectResponse;
-type BlockDoc = Doc & { data: BlockObjectResponse };
+type BlockDoc = Document<BlockObjectResponse, { order: number }>;
 export type { BlockDoc, BlockResponse, BlockObjectResponse };
 
 type CommentResponse = CommentObjectResponse | PartialCommentObjectResponse;
-type CommentDoc = Doc & { data: CommentObjectResponse };
+type CommentDoc = Document<CommentObjectResponse, { order: number }>;
+
 export type { CommentDoc, CommentResponse, CommentObjectResponse };
+
+type Document<T, K = {}> = Omit<Doc, "data" | "metadata"> & {
+  data: T;
+  metadata: K;
+};
 
 export type NotionResponse =
   | DatabaseResponse
