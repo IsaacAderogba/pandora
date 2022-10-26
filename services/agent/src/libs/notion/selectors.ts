@@ -10,6 +10,7 @@ import {
 export const $databaseDoc = (database: DatabaseObjectResponse): DatabaseDoc => {
   return {
     id: database.id,
+    parentId: null,
     type: DocType.DATABASE,
     title: $databaseTitle(database),
     data: database,
