@@ -33,16 +33,9 @@ class Notion {
   async databaseRecursivelyList(
     params: Omit<SearchParameters, "filter"> = {}
   ): Promise<DatabaseObjectResponse[]> {
-    const documents: DatabaseObjectResponse[] = [];
-    let start_cursor: string | undefined;
-
-    do {
-      const result = await this.databaseList({ ...params, start_cursor });
-      documents.push(...result.results);
-      if (result.next) start_cursor = result.next;
-    } while (start_cursor);
-
-    return documents;
+    return this.recursivelyList((start_cursor) =>
+      this.databaseList({ ...params, start_cursor })
+    );
   }
 
   @rateLimit(1)
@@ -75,16 +68,9 @@ class Notion {
   async pageRecursivelyList(
     params: QueryDatabaseParameters
   ): Promise<PageObjectResponse[]> {
-    const documents: PageObjectResponse[] = [];
-    let start_cursor: string | undefined;
-
-    do {
-      const result = await this.pageList({ ...params, start_cursor });
-      documents.push(...result.results);
-      if (result.next) start_cursor = result.next;
-    } while (start_cursor);
-
-    return documents;
+    return this.recursivelyList((start_cursor) =>
+      this.pageList({ ...params, start_cursor })
+    );
   }
 
   @rateLimit(1)
@@ -118,16 +104,9 @@ class Notion {
   async blockRecursivelyList(
     params: ListBlockChildrenParameters
   ): Promise<BlockObjectResponse[]> {
-    const documents: BlockObjectResponse[] = [];
-    let start_cursor: string | undefined;
-
-    do {
-      const result = await this.blockList({ ...params, start_cursor });
-      documents.push(...result.results);
-      if (result.next) start_cursor = result.next;
-    } while (start_cursor);
-
-    return documents;
+    return this.recursivelyList((start_cursor) =>
+      this.blockList({ ...params, start_cursor })
+    );
   }
 
   @rateLimit(1)
@@ -147,16 +126,9 @@ class Notion {
   async commentRecursivelyList(
     params: ListCommentsParameters
   ): Promise<CommentObjectResponse[]> {
-    const documents: CommentObjectResponse[] = [];
-    let start_cursor: string | undefined;
-
-    do {
-      const result = await this.commentList({ ...params, start_cursor });
-      documents.push(...result.results);
-      if (result.next) start_cursor = result.next;
-    } while (start_cursor);
-
-    return documents;
+    return this.recursivelyList((start_cursor) =>
+      this.commentList({ ...params, start_cursor })
+    );
   }
 
   @rateLimit(1)
@@ -168,6 +140,21 @@ class Notion {
       results: results.filter(isCommentObjectResponse),
       next: next_cursor,
     };
+  }
+
+  private async recursivelyList<T>(
+    loadMore: (cursor: string | undefined) => Promise<PaginationResult<T>>
+  ) {
+    const documents: T[] = [];
+    let start_cursor: string | undefined;
+
+    do {
+      const result = await loadMore(start_cursor);
+      documents.push(...result.results);
+      if (result.next) start_cursor = result.next;
+    } while (start_cursor);
+
+    return documents;
   }
 
   private error(message: string) {
