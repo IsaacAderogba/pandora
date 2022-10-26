@@ -28,6 +28,7 @@ const upsertDatabase = async (db: DatabaseObjectResponse) => {
     create: dbDoc,
     update: dbDoc,
   });
+
   console.log(`[db-upserted]: ${result.title}`);
   return dbDoc;
 };
