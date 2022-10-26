@@ -13,10 +13,15 @@ function rateLimiter(limiter: RateLimiterAbstract) {
   return function target<T extends Constructor>(target: T) {
     for (const key of Object.getOwnPropertyNames(target.prototype)) {
       const desc = Object.getOwnPropertyDescriptor(target.prototype, key);
-      const points = Reflect.getMetadata(Key, target.prototype, key);
+      const metadata: RateLimit = Reflect.getMetadata(
+        Key,
+        target.prototype,
+        key
+      );
       const isMethod = desc?.value instanceof Function;
 
-      if (!isMethod || !points) continue;
+      if (!isMethod || !metadata) continue;
+      const { points } = metadata;
 
       const originalMethod = desc.value;
 
@@ -39,9 +44,15 @@ function rateLimiter(limiter: RateLimiterAbstract) {
   };
 }
 
-function rateLimit(points: number) {
+interface RateLimit {
+  points: number;
+  retryAttempts: number;
+}
+
+function rateLimit(props: Partial<RateLimit> = {}) {
+  const metadata: RateLimit = { points: 1, retryAttempts: 3, ...props };
   return function (target: any, key: string, desc: PropertyDescriptor) {
-    Reflect.defineMetadata(Key, points, target, key);
+    Reflect.defineMetadata(Key, metadata, target, key);
   };
 }
 

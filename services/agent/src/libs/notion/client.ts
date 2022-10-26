@@ -38,10 +38,11 @@ class Notion {
     );
   }
 
-  @rateLimit(1)
+  @rateLimit({ points: 1 })
   async databaseList(
     params: Omit<SearchParameters, "filter"> = {}
   ): Promise<PaginationResult<DatabaseObjectResponse>> {
+    throw new Error("error");
     const { results, next_cursor } = await this.client.search({
       ...params,
       filter: { property: "object", value: "database" },
@@ -53,7 +54,7 @@ class Notion {
     };
   }
 
-  @rateLimit(1)
+  @rateLimit({ points: 1 })
   async databaseRetrieve(
     params: GetDatabaseParameters
   ): Promise<DatabaseObjectResponse> {
@@ -73,7 +74,7 @@ class Notion {
     );
   }
 
-  @rateLimit(1)
+  @rateLimit({ points: 1 })
   async pageList(
     params: QueryDatabaseParameters
   ): Promise<PaginationResult<PageObjectResponse>> {
@@ -84,7 +85,7 @@ class Notion {
     };
   }
 
-  @rateLimit(1)
+  @rateLimit({ points: 1 })
   async pageRetrieve(params: GetPageParameters): Promise<PageObjectResponse> {
     const result = await this.client.pages.retrieve(params);
     if (!isPageObjectResponse(result)) {
@@ -94,7 +95,7 @@ class Notion {
     return result;
   }
 
-  @rateLimit(1)
+  @rateLimit({ points: 1 })
   async propertyRetrieve(
     params: GetPagePropertyParameters
   ): Promise<GetPagePropertyResponse> {
@@ -109,7 +110,7 @@ class Notion {
     );
   }
 
-  @rateLimit(1)
+  @rateLimit({ points: 1 })
   async blockList(
     params: ListBlockChildrenParameters
   ): Promise<PaginationResult<BlockObjectResponse>> {
@@ -131,7 +132,7 @@ class Notion {
     );
   }
 
-  @rateLimit(1)
+  @rateLimit({ points: 1 })
   async commentList(
     params: ListCommentsParameters
   ): Promise<PaginationResult<CommentObjectResponse>> {
