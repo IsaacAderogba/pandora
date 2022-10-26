@@ -15,7 +15,8 @@ type DatabaseDoc = Doc & { data: DatabaseObjectResponse };
 export type { DatabaseDoc, DatabaseResponse, DatabaseObjectResponse };
 
 type PageResponse = PageObjectResponse | PartialPageObjectResponse;
-export type { PageResponse, PageObjectResponse };
+type PageDoc = Doc & { data: PageObjectResponse };
+export type { PageDoc, PageResponse, PageObjectResponse };
 
 type BlockResponse = BlockObjectResponse | PartialBlockObjectResponse;
 export type { BlockResponse, BlockObjectResponse };
