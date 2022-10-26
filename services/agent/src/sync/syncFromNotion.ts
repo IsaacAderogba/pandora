@@ -1,10 +1,10 @@
-import { notion } from "./libs/notion/client";
+import { notion } from "../libs/notion/client";
 import {
   $blockDoc,
   $commentDoc,
   $databaseDoc,
   $pageDoc,
-} from "./libs/notion/selectors";
+} from "../libs/notion/selectors";
 import {
   BlockDoc,
   BlockObjectResponse,
@@ -14,23 +14,20 @@ import {
   DatabaseObjectResponse,
   PageDoc,
   PageObjectResponse,
-} from "./libs/notion/types";
-import { prisma } from "./libs/prisma";
+} from "../libs/notion/types";
+import { prisma } from "../libs/prisma";
 
-/**
- * What's the proper way to retry
- * try catch at root
- * try catch at page
- * // there's actually three level of errors
- */
+class SyncFromNotion {
+  
+}
 
 export const syncFromNotion = async () => {
   while (true) {
     const databases = await notion.databaseListAll();
     for (const db of databases) {
-      const dbDoc = await upsertDatabase(db);
+      await upsertDatabase(db);
 
-      const pages = await notion.pageListAll({ database_id: dbDoc.id });
+      const pages = await notion.pageListAll({ database_id: db.id });
       for (const page of pages) {
         await syncTree(page.id, async (commentIds, blockIds) => {
           await upsertPage(page, { commentIds, blockIds });

@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import cluster from "node:cluster";
-import { syncFromNotion } from "./syncFromNotion";
+import { syncFromNotion } from "./sync/syncFromNotion";
 import { startServer } from "./server";
 
 enum Worker {
