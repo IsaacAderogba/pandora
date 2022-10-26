@@ -42,7 +42,6 @@ class Notion {
   async databaseList(
     params: Omit<SearchParameters, "filter"> = {}
   ): Promise<PaginationResult<DatabaseObjectResponse>> {
-    throw new Error("error");
     const { results, next_cursor } = await this.client.search({
       ...params,
       filter: { property: "object", value: "database" },

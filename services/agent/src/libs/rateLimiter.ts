@@ -21,10 +21,9 @@ function rateLimiter(limiter: RateLimiterAbstract) {
       const isMethod = desc?.value instanceof Function;
 
       if (!isMethod || !metadata) continue;
-      const { points } = metadata;
+      const { points, retryAttempts, retryDelay } = metadata;
 
-      const originalMethod = desc.value;
-
+      const fn = desc.value;
       desc.value = async function (...args: unknown[]) {
         while (true) {
           try {
@@ -36,7 +35,15 @@ function rateLimiter(limiter: RateLimiterAbstract) {
           }
         }
 
-        return originalMethod.apply(this, args);
+        let retries = retryAttempts;
+        do {
+          try {
+            return await fn.apply(this, args);
+          } catch (err) {
+            if (retries <= 0) throw err;
+            await delay(retryDelay);
+          }
+        } while (retries-- > 0);
       };
 
       Object.defineProperty(target.prototype, key, desc);
@@ -47,10 +54,17 @@ function rateLimiter(limiter: RateLimiterAbstract) {
 interface RateLimit {
   points: number;
   retryAttempts: number;
+  retryDelay: number;
 }
 
 function rateLimit(props: Partial<RateLimit> = {}) {
-  const metadata: RateLimit = { points: 1, retryAttempts: 3, ...props };
+  const metadata: RateLimit = {
+    points: 1,
+    retryAttempts: 3,
+    retryDelay: 1000,
+    ...props,
+  };
+
   return function (target: any, key: string, desc: PropertyDescriptor) {
     Reflect.defineMetadata(Key, metadata, target, key);
   };
