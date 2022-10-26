@@ -3,8 +3,13 @@ import { upsertComment } from "../documents/comment";
 import { upsertDatabase } from "../documents/database";
 import { upsertPage } from "../documents/page";
 import { notion } from "../libs/notion/client";
+import { BlockObjectResponse, DatabaseObjectResponse, PageObjectResponse } from "../libs/notion/types";
 
 class SyncFromNotion {
+  retryDatabases: DatabaseObjectResponse[] = [];
+  retryPages: PageObjectResponse[] = [];
+  retryBlocks: BlockObjectResponse[] = [];
+
   start = async () => {
     while (true) {
       const databases = await notion.databaseListAll();
