@@ -1,7 +1,15 @@
 import { notion } from "./libs/notion/client";
+import { $databaseTitle } from "./libs/notion/selectors";
 
 export const syncFromNotion = async () => {
-  const databases = await notion.databaseRecursivelyList();
+  while (true) {
+    const databases = await notion.databaseListAll();
+    for (const db of databases) {
+      console.log(`[db-sync]: ${$databaseTitle(db)}`);
 
-  console.log(databases);
+      const pages = await notion.pageListAll({ database_id: db.id });
+      for (const page of pages) {
+      }
+    }
+  }
 };

@@ -42,3 +42,6 @@ export type {
   ListBlockChildrenParameters,
   GetPagePropertyResponse,
 } from "@notionhq/client/build/src/api-endpoints";
+
+// properties
+

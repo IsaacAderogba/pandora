@@ -30,10 +30,10 @@ class Notion {
     notionVersion: "2022-06-28",
   });
 
-  async databaseRecursivelyList(
+  async databaseListAll(
     params: Omit<SearchParameters, "filter"> = {}
   ): Promise<DatabaseObjectResponse[]> {
-    return this.recursivelyList((start_cursor) =>
+    return this.listAll((start_cursor) =>
       this.databaseList({ ...params, start_cursor })
     );
   }
@@ -65,10 +65,10 @@ class Notion {
     return result;
   }
 
-  async pageRecursivelyList(
+  async pageListAll(
     params: QueryDatabaseParameters
   ): Promise<PageObjectResponse[]> {
-    return this.recursivelyList((start_cursor) =>
+    return this.listAll((start_cursor) =>
       this.pageList({ ...params, start_cursor })
     );
   }
@@ -101,10 +101,10 @@ class Notion {
     return await this.client.pages.properties.retrieve(params);
   }
 
-  async blockRecursivelyList(
+  async blockListAll(
     params: ListBlockChildrenParameters
   ): Promise<BlockObjectResponse[]> {
-    return this.recursivelyList((start_cursor) =>
+    return this.listAll((start_cursor) =>
       this.blockList({ ...params, start_cursor })
     );
   }
@@ -123,10 +123,10 @@ class Notion {
     };
   }
 
-  async commentRecursivelyList(
+  async commentListAll(
     params: ListCommentsParameters
   ): Promise<CommentObjectResponse[]> {
-    return this.recursivelyList((start_cursor) =>
+    return this.listAll((start_cursor) =>
       this.commentList({ ...params, start_cursor })
     );
   }
@@ -142,7 +142,7 @@ class Notion {
     };
   }
 
-  private async recursivelyList<T>(
+  private async listAll<T>(
     loadMore: (cursor: string | undefined) => Promise<PaginationResult<T>>
   ) {
     const documents: T[] = [];
