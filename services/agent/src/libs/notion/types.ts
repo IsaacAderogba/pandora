@@ -19,7 +19,8 @@ type PageDoc = Doc & { data: PageObjectResponse };
 export type { PageDoc, PageResponse, PageObjectResponse };
 
 type BlockResponse = BlockObjectResponse | PartialBlockObjectResponse;
-export type { BlockResponse, BlockObjectResponse };
+type BlockDoc = Doc & { data: BlockObjectResponse };
+export type { BlockDoc, BlockResponse, BlockObjectResponse };
 
 type CommentResponse = CommentObjectResponse | PartialCommentObjectResponse;
 type CommentDoc = Doc & { data: CommentObjectResponse };

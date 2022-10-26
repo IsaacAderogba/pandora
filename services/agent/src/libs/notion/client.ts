@@ -142,7 +142,7 @@ class Notion {
     };
   }
 
-  async listAll<T>(
+  private async listAll<T>(
     loadMore: (cursor: string | undefined) => Promise<PaginationResult<T>>
   ) {
     const documents: T[] = [];
