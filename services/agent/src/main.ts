@@ -9,7 +9,6 @@ enum Worker {
   Server = "Server",
   SyncFromNotion = "SyncFromNotion",
   SyncToNotion = "SyncToNotion",
-  SyncFromReadwiseToNotion = "SyncFromReadwiseToNotion",
 }
 
 if (cluster.isPrimary) {

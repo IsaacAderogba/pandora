@@ -30,6 +30,21 @@ class Notion {
     notionVersion: "2022-06-28",
   });
 
+  async databaseRecursivelyList(
+    params: Omit<SearchParameters, "filter"> = {}
+  ): Promise<DatabaseObjectResponse[]> {
+    const documents: DatabaseObjectResponse[] = [];
+    let start_cursor: string | undefined;
+
+    do {
+      const result = await this.databaseList({ ...params, start_cursor });
+      documents.push(...result.results);
+      if (result.next) start_cursor = result.next;
+    } while (start_cursor);
+
+    return documents;
+  }
+
   @rateLimit(1)
   async databaseList(
     params: Omit<SearchParameters, "filter"> = {}
@@ -55,6 +70,21 @@ class Notion {
     }
 
     return result;
+  }
+
+  async pageRecursivelyList(
+    params: QueryDatabaseParameters
+  ): Promise<PageObjectResponse[]> {
+    const documents: PageObjectResponse[] = [];
+    let start_cursor: string | undefined;
+
+    do {
+      const result = await this.pageList({ ...params, start_cursor });
+      documents.push(...result.results);
+      if (result.next) start_cursor = result.next;
+    } while (start_cursor);
+
+    return documents;
   }
 
   @rateLimit(1)
@@ -85,6 +115,21 @@ class Notion {
     return await this.client.pages.properties.retrieve(params);
   }
 
+  async blockRecursivelyList(
+    params: ListBlockChildrenParameters
+  ): Promise<BlockObjectResponse[]> {
+    const documents: BlockObjectResponse[] = [];
+    let start_cursor: string | undefined;
+
+    do {
+      const result = await this.blockList({ ...params, start_cursor });
+      documents.push(...result.results);
+      if (result.next) start_cursor = result.next;
+    } while (start_cursor);
+
+    return documents;
+  }
+
   @rateLimit(1)
   async blockList(
     params: ListBlockChildrenParameters
@@ -97,6 +142,21 @@ class Notion {
       results: results.filter(isBlockObjectResponse),
       next: next_cursor,
     };
+  }
+
+  async commentRecursivelyList(
+    params: ListCommentsParameters
+  ): Promise<CommentObjectResponse[]> {
+    const documents: CommentObjectResponse[] = [];
+    let start_cursor: string | undefined;
+
+    do {
+      const result = await this.commentList({ ...params, start_cursor });
+      documents.push(...result.results);
+      if (result.next) start_cursor = result.next;
+    } while (start_cursor);
+
+    return documents;
   }
 
   @rateLimit(1)
