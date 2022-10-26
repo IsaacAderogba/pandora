@@ -7,6 +7,9 @@ import {
   PageDoc,
   PageObjectResponse,
   CommentObjectResponse,
+  BlockDoc,
+  BlockObjectResponse,
+  RichTextItemResponse,
 } from "./types";
 
 // database selectors
@@ -24,7 +27,7 @@ export const $databaseDoc = (database: DatabaseObjectResponse): DatabaseDoc => {
 };
 
 export const $databaseTitle = (database: DatabaseObjectResponse) => {
-  return database.title.map(({ plain_text }) => plain_text).join("");
+  return $richTextsPlainText(database.title);
 };
 
 // page selectors
@@ -66,10 +69,48 @@ export const $commentDoc = (
 };
 
 export const $commentTitle = (comment: CommentObjectResponse) => {
-  return comment.rich_text.map(({ plain_text }) => plain_text).join("");
+  return $richTextsPlainText(comment.rich_text);
+};
+
+// block selectors
+export const $blockDoc = (
+  block: BlockObjectResponse,
+  metadata: BlockDoc["metadata"]
+): BlockDoc => {
+  return {
+    id: block.id,
+    parentId: $parentId(block.parent),
+    type: DocType.BLOCK,
+    title: $blockText(block),
+    data: block,
+    metadata,
+    createdAt: new Date(block.created_time),
+    updatedAt: new Date(block.last_edited_time),
+  };
+};
+
+export const $blockText = (block: BlockObjectResponse) => {
+  switch (block.type) {
+    case "heading_1":
+    case "heading_2":
+    case "heading_3":
+    case "paragraph":
+    case "callout":
+    case "quote":
+    case "bulleted_list_item":
+    case "numbered_list_item":
+    case "to_do":
+    case "toggle":
+      return $richTextsPlainText((block as any)[block.type].rich_text);
+    default:
+      return "";
+  }
 };
 
 // shared
+export const $richTextsPlainText = (richTexts: RichTextItemResponse[]) =>
+  richTexts.map(({ plain_text }) => plain_text).join("");
+
 export const $parentId = (parent: PageObjectResponse["parent"]) => {
   switch (parent.type) {
     case "database_id":

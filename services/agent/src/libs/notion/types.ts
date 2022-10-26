@@ -52,6 +52,5 @@ export type {
   ListCommentsParameters,
   ListBlockChildrenParameters,
   GetPagePropertyResponse,
+  RichTextItemResponse,
 } from "@notionhq/client/build/src/api-endpoints";
-
-// properties
