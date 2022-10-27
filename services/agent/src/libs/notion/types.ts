@@ -38,7 +38,7 @@ type Document<T, K = {}> = Omit<Doc, "data" | "metadata"> & {
   metadata: K;
 };
 
-export type NotionResponse =
+export type DocResponse =
   | DatabaseResponse
   | PageResponse
   | CommentResponse

@@ -6,7 +6,7 @@ import { notion } from "../libs/notion/client";
 import { DatabaseObjectResponse } from "../libs/notion/types";
 import { captureError } from "../libs/sentry";
 
-export const syncFromNotion = async () => {
+export const syncNotion = async () => {
   while (true) {
     try {
       const databases = await notion.databaseListAll();
