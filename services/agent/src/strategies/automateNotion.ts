@@ -1,3 +1,6 @@
+import { upsertComment } from "../documents/comment";
+import { upsertDatabase } from "../documents/database";
+import { upsertPage } from "../documents/page";
 import { notion } from "../libs/notion/client";
 import { DatabaseObjectResponse } from "../libs/notion/types";
 import { captureError } from "../libs/sentry";
@@ -15,38 +18,67 @@ const commentStrategies: CommentStrategy[] = [];
 export const automateNotion = async () => {
   while (true) {
     try {
-      const databases = await notion.databaseListAll();
-      for (const database of databases) {
-        await automateDatabase(database);
-      }
+      await automateWorkspace();
     } catch (err) {
       captureError(err);
     }
   }
 };
 
-export const automateDatabase = async (database: DatabaseObjectResponse) => {
-  try {
-    await maybeRunStrategies(database, databaseStrategies);
+const automateWorkspace = async () => {
+  const databases = await notion.databaseListAll();
 
-    const pages = await notion.pageListAll({
-      database_id: database.id,
-      filter: {
-        or: [
-          {
-            property: "Updated At",
-            date: { after: getHourAgo().toISOString() },
-          },
-        ],
-      },
-    });
-
-    for (const page of pages) {
-      await maybeRunStrategies(page, pageStrategies);
-      // todo
+  for (const database of databases) {
+    try {
+      await automateDatabase(database);
+    } catch (err) {
+      captureError(err);
     }
-  } catch (err) {
-    captureError(err);
+  }
+};
+
+const automateDatabase = async (db: DatabaseObjectResponse) => {
+  const initial = await upsertDatabase(db);
+  await maybeRunStrategies(initial, databaseStrategies);
+
+  const pages = await notion.pageListAll({
+    database_id: db.id,
+    filter: {
+      or: [
+        {
+          property: "Updated At",
+          date: { after: getHourAgo().toISOString() },
+        },
+      ],
+    },
+  });
+
+  for (const page of pages) {
+    try {
+      await automateDocTree(page.id, async (commentIds, blockIds) => {
+        const initial = await upsertPage(page, { commentIds, blockIds });
+        await maybeRunStrategies(initial, pageStrategies);
+      });
+    } catch (err) {
+      captureError(err);
+    }
+  }
+};
+
+const automateDocTree = async (
+  id: string,
+  onSave: (commentIds: string[], blockIds: string[]) => Promise<void>
+): Promise<void> => {
+  const comments = await notion.commentListAll({ block_id: id });
+  const blocks = await notion.blockListAll({ block_id: id });
+  await onSave(
+    comments.map((c) => c.id),
+    blocks.map((b) => b.id)
+  );
+
+  for (const comment of comments) {
+    const initial = await upsertComment(comment);
+    await maybeRunStrategies(initial, commentStrategies);
   }
 };
 

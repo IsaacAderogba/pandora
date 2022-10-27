@@ -1,4 +1,4 @@
-import { CommentObjectResponse } from "../libs/notion/types";
+import { CommentDoc } from "../libs/notion/types";
 import { Strategy } from "./Strategy";
 
-export type CommentStrategy = Strategy<CommentObjectResponse>;
+export type CommentStrategy = Strategy<CommentDoc>;
