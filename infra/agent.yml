@@ -55,6 +55,11 @@ spec:
                 secretKeyRef:
                   name: notion-secret
                   key: NOTION_SECRET
+            - name: SENTRY_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: sentry-dsn
+                  key: SENTRY_DSN
 
 
 ---
