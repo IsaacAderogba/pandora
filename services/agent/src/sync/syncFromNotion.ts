@@ -3,30 +3,39 @@ import { upsertComment } from "../documents/comment";
 import { upsertDatabase } from "../documents/database";
 import { upsertPage } from "../documents/page";
 import { notion } from "../libs/notion/client";
-import { BlockObjectResponse, DatabaseObjectResponse, PageObjectResponse } from "../libs/notion/types";
+import { DatabaseObjectResponse } from "../libs/notion/types";
+import { Sentry } from "../libs/sentry";
 
 class SyncFromNotion {
-  retryDatabases: DatabaseObjectResponse[] = [];
-  retryPages: PageObjectResponse[] = [];
-  retryBlocks: BlockObjectResponse[] = [];
-
   start = async () => {
     while (true) {
-      const databases = await notion.databaseListAll();
-      for (const db of databases) {
-        await upsertDatabase(db);
-
-        const pages = await notion.pageListAll({ database_id: db.id });
-        for (const page of pages) {
-          await this.syncTree(page.id, async (commentIds, blockIds) => {
-            await upsertPage(page, { commentIds, blockIds });
-          });
+      try {
+        const databases = await notion.databaseListAll();
+        for (const database of databases) {
+          await this.syncDatabase(database);
         }
+      } catch (err) {
+        Sentry.captureException(err);
       }
     }
   };
 
-  syncTree = async (
+  private syncDatabase = async (db: DatabaseObjectResponse) => {
+    try {
+      await upsertDatabase(db);
+
+      const pages = await notion.pageListAll({ database_id: db.id });
+      for (const page of pages) {
+        await this.syncDocTree(page.id, async (commentIds, blockIds) => {
+          await upsertPage(page, { commentIds, blockIds });
+        });
+      }
+    } catch (err) {
+      Sentry.captureException(err);
+    }
+  };
+
+  private syncDocTree = async (
     id: string,
     onSave: (commentIds: string[], blockIds: string[]) => Promise<void>
   ): Promise<void> => {
@@ -42,9 +51,13 @@ class SyncFromNotion {
     }
 
     for (const block of blocks) {
-      await this.syncTree(block.id, async (commentIds, blockIds) => {
-        await upsertBlock(block, { commentIds, blockIds });
-      });
+      try {
+        await this.syncDocTree(block.id, async (commentIds, blockIds) => {
+          await upsertBlock(block, { commentIds, blockIds });
+        });
+      } catch (err) {
+        Sentry.captureException(err);
+      }
     }
   };
 }
