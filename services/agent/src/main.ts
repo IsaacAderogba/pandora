@@ -33,7 +33,7 @@ if (cluster.isPrimary) {
       startServer();
       break;
     case Worker.SyncFromNotion:
-      syncFromNotion.start();
+      syncFromNotion();
       break;
   }
 }
