@@ -1,2 +1,3 @@
-export const delay = (ms = 0): Promise<NodeJS.Timeout> =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+import util from "util";
+
+export const delay = util.promisify(setTimeout);

@@ -9,10 +9,19 @@ import { captureError } from "../libs/sentry";
 export const syncNotion = async () => {
   while (true) {
     try {
-      const databases = await notion.databaseListAll();
-      for (const database of databases) {
-        await syncDatabase(database);
-      }
+      await syncWorkspace();
+    } catch (err) {
+      captureError(err);
+    }
+  }
+};
+
+const syncWorkspace = async () => {
+  const databases = await notion.databaseListAll();
+
+  for (const database of databases) {
+    try {
+      await syncDatabase(database);
     } catch (err) {
       captureError(err);
     }
@@ -20,17 +29,17 @@ export const syncNotion = async () => {
 };
 
 const syncDatabase = async (db: DatabaseObjectResponse) => {
-  try {
-    await upsertDatabase(db);
+  await upsertDatabase(db);
+  const pages = await notion.pageListAll({ database_id: db.id });
 
-    const pages = await notion.pageListAll({ database_id: db.id });
-    for (const page of pages) {
+  for (const page of pages) {
+    try {
       await syncDocTree(page.id, async (commentIds, blockIds) => {
         await upsertPage(page, { commentIds, blockIds });
       });
+    } catch (err) {
+      captureError(err);
     }
-  } catch (err) {
-    captureError(err);
   }
 };
 
@@ -46,7 +55,11 @@ const syncDocTree = async (
   );
 
   for (const comment of comments) {
-    await upsertComment(comment);
+    try {
+      await upsertComment(comment);
+    } catch (err) {
+      captureError(err);
+    }
   }
 
   for (const block of blocks) {
