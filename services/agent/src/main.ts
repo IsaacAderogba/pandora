@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+import "./libs/sentry";
 import cluster from "node:cluster";
 import { syncFromNotion } from "./sync/syncFromNotion";
 import { startServer } from "./server";
