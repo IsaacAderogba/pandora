@@ -8,7 +8,7 @@ Sentry.init({
   serverName: "agent",
   integrations: [new Tracing.Integrations.Express()],
   tracesSampleRate: 1.0,
-  enabled: process.env.NODE_ENV === "production",
+  enabled: false,
 });
 
 const captureError = (error: unknown) => {

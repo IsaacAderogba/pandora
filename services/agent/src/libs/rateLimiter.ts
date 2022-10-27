@@ -31,7 +31,9 @@ function rateLimiter(limiter: RateLimiterAbstract) {
             break;
           } catch (err) {
             if (!(err instanceof RateLimiterRes)) throw err;
+            console.log("[before-delay] limiter.consume")
             await delay(err.msBeforeNext + 1);
+            console.log("[after-delay] limiter.consume")
           }
         }
 
@@ -41,7 +43,9 @@ function rateLimiter(limiter: RateLimiterAbstract) {
             return await fn.apply(this, args);
           } catch (err) {
             if (retries <= 0) throw err;
+            console.log("[before-delay] fn.apply")
             await delay(retryDelay);
+            console.log("[after-delay] fn.apply")
           }
         } while (retries-- > 0);
       };
