@@ -1,16 +1,12 @@
 import { notion } from "../libs/notion/client";
 import { DatabaseObjectResponse } from "../libs/notion/types";
 import { captureError } from "../libs/sentry";
-import {
-  BlockStrategy,
-  CommentStrategy,
-  DatabaseStrategy,
-  DocStrategy,
-  PageStrategy,
-  Strategy,
-} from "./Strategy";
+import { BlockStrategy } from "./BlockStrategies";
+import { CommentStrategy } from "./CommentStrategies";
+import { DatabaseStrategy } from "./DatabaseStrategies";
+import { PageStrategy } from "./PageStrategies";
+import { Strategy } from "./Strategy";
 
-const docStrategies: DocStrategy[] = [];
 const databaseStrategies: DatabaseStrategy[] = [];
 const pageStrategies: PageStrategy[] = [];
 const blockStrategies: BlockStrategy[] = [];
