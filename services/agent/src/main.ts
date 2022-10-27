@@ -6,10 +6,12 @@ import cluster from "node:cluster";
 import { syncNotion } from "./strategies/syncNotion";
 import { startServer } from "./server";
 import { Worker } from "./utils/enums";
+import { automateNotion } from "./strategies/automateNotion";
 
 if (cluster.isPrimary) {
   cluster.fork({ WORKER: Worker.Server });
   cluster.fork({ WORKER: Worker.SyncNotion });
+  cluster.fork({ WORKER: Worker.AutomateNotion });
 
   cluster.on("exit", () => {
     for (const id in cluster.workers) {
@@ -28,6 +30,9 @@ if (cluster.isPrimary) {
       break;
     case Worker.SyncNotion:
       syncNotion();
+      break;
+    case Worker.AutomateNotion:
+      automateNotion();
       break;
   }
 }
