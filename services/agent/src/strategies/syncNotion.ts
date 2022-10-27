@@ -4,15 +4,13 @@ import { upsertDatabase } from "../documents/database";
 import { upsertPage } from "../documents/page";
 import { notion } from "../libs/notion/client";
 import { DatabaseObjectResponse } from "../libs/notion/types";
-import { captureError } from "../libs/sentry";
+import { withError } from "../libs/sentry";
 
 export const syncNotion = async () => {
   while (true) {
-    try {
+    await withError(async () => {
       await syncWorkspace();
-    } catch (err) {
-      captureError(err);
-    }
+    });
   }
 };
 
@@ -20,11 +18,9 @@ const syncWorkspace = async () => {
   const databases = await notion.databaseListAll();
 
   for (const database of databases) {
-    try {
+    await withError(async () => {
       await syncDatabase(database);
-    } catch (err) {
-      captureError(err);
-    }
+    });
   }
 };
 
@@ -33,13 +29,11 @@ const syncDatabase = async (db: DatabaseObjectResponse) => {
   const pages = await notion.pageListAll({ database_id: db.id });
 
   for (const page of pages) {
-    try {
+    await withError(async () => {
       await syncDocTree(page.id, async (commentIds, blockIds) => {
         await upsertPage(page, { commentIds, blockIds });
       });
-    } catch (err) {
-      captureError(err);
-    }
+    });
   }
 };
 
@@ -55,20 +49,16 @@ const syncDocTree = async (
   );
 
   for (const comment of comments) {
-    try {
+    await withError(async () => {
       await upsertComment(comment);
-    } catch (err) {
-      captureError(err);
-    }
+    });
   }
 
   for (const block of blocks) {
-    try {
+    await withError(async () => {
       await syncDocTree(block.id, async (commentIds, blockIds) => {
         await upsertBlock(block, { commentIds, blockIds });
       });
-    } catch (err) {
-      captureError(err);
-    }
+    });
   }
 };

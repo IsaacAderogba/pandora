@@ -6,6 +6,7 @@ import {
 } from "rate-limiter-flexible";
 import { Constructor } from "../utils/types";
 import { delay } from "../utils/delay";
+import { debug } from "../utils/debug";
 
 const Key = "rate:limiter";
 
@@ -31,9 +32,9 @@ function rateLimiter(limiter: RateLimiterAbstract) {
             break;
           } catch (err) {
             if (!(err instanceof RateLimiterRes)) throw err;
-            console.log("[before-delay] limiter.consume");
-            await delay(Math.max(err.msBeforeNext + 1, 500));
-            console.log("[after-delay] limiter.consume");
+            debug("[before-delay] limiter.consume");
+            await delay(Math.max(err.msBeforeNext + 1));
+            debug("[after-delay] limiter.consume");
           }
         }
 
@@ -43,9 +44,9 @@ function rateLimiter(limiter: RateLimiterAbstract) {
             return await fn.apply(this, args);
           } catch (err) {
             if (retries <= 0) throw err;
-            console.log("[before-delay] fn.apply");
+            debug("[before-delay] fn.apply");
             await delay(retryDelay);
-            console.log("[after-delay] fn.apply");
+            debug("[after-delay] fn.apply");
           }
         } while (retries-- > 0);
       };

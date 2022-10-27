@@ -16,4 +16,12 @@ const captureError = (error: unknown) => {
   Sentry.captureException(error);
 };
 
+export const withError = async <T>(callback: () => T | Promise<T>) => {
+  try {
+    await callback();
+  } catch (err) {
+    captureError(err);
+  }
+};
+
 export { Sentry, captureError };

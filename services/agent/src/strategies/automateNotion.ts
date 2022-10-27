@@ -1,9 +1,10 @@
+import { upsertBlock } from "../documents/block";
 import { upsertComment } from "../documents/comment";
 import { upsertDatabase } from "../documents/database";
 import { upsertPage } from "../documents/page";
 import { notion } from "../libs/notion/client";
 import { DatabaseObjectResponse } from "../libs/notion/types";
-import { captureError } from "../libs/sentry";
+import { withError } from "../libs/sentry";
 import { BlockStrategy } from "./BlockStrategies";
 import { CommentStrategy } from "./CommentStrategies";
 import { DatabaseStrategy } from "./DatabaseStrategies";
@@ -17,11 +18,9 @@ const commentStrategies: CommentStrategy[] = [];
 
 export const automateNotion = async () => {
   while (true) {
-    try {
+    await withError(async () => {
       await automateWorkspace();
-    } catch (err) {
-      captureError(err);
-    }
+    });
   }
 };
 
@@ -29,11 +28,9 @@ const automateWorkspace = async () => {
   const databases = await notion.databaseListAll();
 
   for (const database of databases) {
-    try {
+    await withError(async () => {
       await automateDatabase(database);
-    } catch (err) {
-      captureError(err);
-    }
+    });
   }
 };
 
@@ -54,14 +51,12 @@ const automateDatabase = async (db: DatabaseObjectResponse) => {
   });
 
   for (const page of pages) {
-    try {
+    await withError(async () => {
       await automateDocTree(page.id, async (commentIds, blockIds) => {
         const initial = await upsertPage(page, { commentIds, blockIds });
         await maybeRunStrategies(initial, pageStrategies);
       });
-    } catch (err) {
-      captureError(err);
-    }
+    });
   }
 };
 
@@ -77,8 +72,19 @@ const automateDocTree = async (
   );
 
   for (const comment of comments) {
-    const initial = await upsertComment(comment);
-    await maybeRunStrategies(initial, commentStrategies);
+    await withError(async () => {
+      const initial = await upsertComment(comment);
+      await maybeRunStrategies(initial, commentStrategies);
+    });
+  }
+
+  for (const block of blocks) {
+    await withError(async () => {
+      await automateDocTree(block.id, async (commentIds, blockIds) => {
+        const initial = await upsertBlock(block, { commentIds, blockIds });
+        await maybeRunStrategies(initial, blockStrategies);
+      });
+    });
   }
 };
 
