@@ -4,11 +4,11 @@ import {
   PageObjectResponse,
   CommentObjectResponse,
   BlockObjectResponse,
-  NotionResponse,
+  DocResponse,
 } from "./types";
 
 export const isDatabaseObjectResponse = (
-  value: NotionResponse
+  value: DocResponse
 ): value is DatabaseObjectResponse => {
   if (value.object === "database") {
     if ("parent" in value) return true;
@@ -18,7 +18,7 @@ export const isDatabaseObjectResponse = (
 };
 
 export const isPageObjectResponse = (
-  value: NotionResponse
+  value: DocResponse
 ): value is PageObjectResponse => {
   if (value.object === "page") {
     if ("parent" in value) return true;
@@ -28,7 +28,7 @@ export const isPageObjectResponse = (
 };
 
 export const isBlockObjectResponse = (
-  value: NotionResponse
+  value: DocResponse
 ): value is BlockObjectResponse => {
   if (value.object === "block") {
     if ("parent" in value) return true;
@@ -38,7 +38,7 @@ export const isBlockObjectResponse = (
 };
 
 export const isCommentObjectResponse = (
-  value: NotionResponse
+  value: DocResponse
 ): value is CommentObjectResponse => {
   if (value.object === "comment") {
     if ("parent" in value) return true;

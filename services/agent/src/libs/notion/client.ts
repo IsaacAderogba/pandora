@@ -1,6 +1,5 @@
 import { Client } from "@notionhq/client";
-import { rateLimiter, rateLimit } from "../rateLimiter";
-import { notionLimiter } from "./limiter";
+import { rateLimiter, rateLimit } from "../limiter";
 import {
   isBlockObjectResponse,
   isCommentObjectResponse,
@@ -23,7 +22,7 @@ import {
   GetPagePropertyResponse,
 } from "./types";
 
-@rateLimiter(notionLimiter)
+@rateLimiter({ duration: 1000, points: 1 })
 class Notion {
   client = new Client({
     auth: process.env.NOTION_SECRET,

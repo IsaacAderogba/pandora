@@ -3,19 +3,15 @@ dotenv.config();
 
 import "./libs/sentry";
 import cluster from "node:cluster";
-import { syncFromNotion } from "./sync/syncFromNotion";
+import { syncNotion } from "./strategies/syncNotion";
 import { startServer } from "./server";
-
-enum Worker {
-  Server = "Server",
-  SyncFromNotion = "SyncFromNotion",
-  SyncToNotion = "SyncToNotion",
-}
+import { Worker } from "./utils/enums";
+import { automateNotion } from "./strategies/automateNotion";
 
 if (cluster.isPrimary) {
   cluster.fork({ WORKER: Worker.Server });
-  cluster.fork({ WORKER: Worker.SyncFromNotion });
-  
+  cluster.fork({ WORKER: Worker.SyncNotion });
+  cluster.fork({ WORKER: Worker.AutomateNotion });
 
   cluster.on("exit", () => {
     for (const id in cluster.workers) {
@@ -32,8 +28,11 @@ if (cluster.isPrimary) {
     case Worker.Server:
       startServer();
       break;
-    case Worker.SyncFromNotion:
-      syncFromNotion.start();
+    case Worker.SyncNotion:
+      syncNotion();
+      break;
+    case Worker.AutomateNotion:
+      automateNotion();
       break;
   }
 }
