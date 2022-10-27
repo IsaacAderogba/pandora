@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/node";
 import * as Tracing from "@sentry/tracing";
+import { yellow } from "../utils/colors";
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
@@ -10,4 +11,9 @@ Sentry.init({
   enabled: process.env.NODE_ENV === "production",
 });
 
-export { Sentry };
+const captureError = (error: unknown) => {
+  console.warn(yellow, "[captured error]", error);
+  Sentry.captureException(error);
+};
+
+export { Sentry, captureError };

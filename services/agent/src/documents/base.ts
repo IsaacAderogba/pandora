@@ -5,6 +5,7 @@ import {
   PageDoc,
 } from "../libs/notion/types";
 import { prisma } from "../libs/prisma";
+import { cyan } from "../utils/colors";
 
 export const upsertDoc = async <
   T extends DatabaseDoc | PageDoc | CommentDoc | BlockDoc
@@ -19,6 +20,6 @@ export const upsertDoc = async <
 
   const header = `[${doc.type.toLowerCase()}-upserted]`;
   const label = `${new Date().toISOString()} ${doc.title}`;
-  console.log(`${header}: ${label}`);
+  console.log(cyan, header, label);
   return doc;
 };

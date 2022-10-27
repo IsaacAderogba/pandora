@@ -4,7 +4,7 @@ import { upsertDatabase } from "../documents/database";
 import { upsertPage } from "../documents/page";
 import { notion } from "../libs/notion/client";
 import { DatabaseObjectResponse } from "../libs/notion/types";
-import { Sentry } from "../libs/sentry";
+import { captureError } from "../libs/sentry";
 
 class SyncFromNotion {
   start = async () => {
@@ -15,7 +15,7 @@ class SyncFromNotion {
           await this.syncDatabase(database);
         }
       } catch (err) {
-        Sentry.captureException(err);
+        captureError(err);
       }
     }
   };
@@ -31,7 +31,7 @@ class SyncFromNotion {
         });
       }
     } catch (err) {
-      Sentry.captureException(err);
+      captureError(err);
     }
   };
 
@@ -56,7 +56,7 @@ class SyncFromNotion {
           await upsertBlock(block, { commentIds, blockIds });
         });
       } catch (err) {
-        Sentry.captureException(err);
+        captureError(err);
       }
     }
   };
