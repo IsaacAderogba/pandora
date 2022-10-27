@@ -1,15 +1,39 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import express, { Express } from "express";
-import { healthRouter } from "./tasks/health/router";
+import "./libs/sentry";
+import cluster from "node:cluster";
+import { syncFromNotion } from "./sync/syncFromNotion";
+import { startServer } from "./server";
 
-const app: Express = express();
+enum Worker {
+  Server = "Server",
+  SyncFromNotion = "SyncFromNotion",
+  SyncToNotion = "SyncToNotion",
+}
 
-app.use("/health", healthRouter);
+if (cluster.isPrimary) {
+  cluster.fork({ WORKER: Worker.Server });
+  cluster.fork({ WORKER: Worker.SyncFromNotion });
+  
 
+  cluster.on("exit", () => {
+    for (const id in cluster.workers) {
+      const worker = cluster.workers[id];
+      if (worker) worker.kill();
+    }
 
-const port = process.env.PORT ?? 3000;
-app.listen(port, () => {
-  console.log(`⚡️[server]: Server is running at https://localhost:${port}`);
-});
+    process.exit(0);
+  });
+} else {
+  const worker = process.env.WORKER;
+
+  switch (worker) {
+    case Worker.Server:
+      startServer();
+      break;
+    case Worker.SyncFromNotion:
+      syncFromNotion.start();
+      break;
+  }
+}
