@@ -1,16 +1,22 @@
 import "reflect-metadata";
-import {
-  RateLimiterAbstract,
-  RateLimiterRes,
-  RateLimiterMemory,
-} from "rate-limiter-flexible";
+import { RateLimiter } from "limiter";
 import { Constructor } from "../utils/types";
 import { delay } from "../utils/delay";
 import { debug } from "../utils/debug";
 
 const Key = "rate:limiter";
 
-function rateLimiter(limiter: RateLimiterAbstract) {
+interface RateLimiterProps {
+  points: number;
+  duration: number;
+}
+
+function rateLimiter({ points, duration }: RateLimiterProps) {
+  const limiter = new RateLimiter({
+    interval: duration,
+    tokensPerInterval: points,
+  });
+
   return function target<T extends Constructor>(target: T) {
     for (const key of Object.getOwnPropertyNames(target.prototype)) {
       const desc = Object.getOwnPropertyDescriptor(target.prototype, key);
@@ -26,27 +32,16 @@ function rateLimiter(limiter: RateLimiterAbstract) {
 
       const fn = desc.value;
       desc.value = async function (...args: unknown[]) {
-        while (true) {
-          try {
-            await limiter.consume(limiter.keyPrefix, points);
-            break;
-          } catch (err) {
-            if (!(err instanceof RateLimiterRes)) throw err;
-            debug("[before-delay] limiter.consume");
-            await delay(Math.max(err.msBeforeNext + 1));
-            debug("[after-delay] limiter.consume");
-          }
-        }
-
         let retries = retryAttempts;
         do {
           try {
+            await limiter.removeTokens(points);
             return await fn.apply(this, args);
           } catch (err) {
             if (retries <= 0) throw err;
-            debug("[before-delay] fn.apply");
+            debug("[before-delay]", retries);
             await delay(retryDelay);
-            debug("[after-delay] fn.apply");
+            debug("[after-delay]", retries);
           }
         } while (retries-- > 0);
       };
@@ -75,4 +70,4 @@ function rateLimit(props: Partial<RateLimit> = {}) {
   };
 }
 
-export { RateLimiterMemory, rateLimiter, rateLimit };
+export { rateLimiter, rateLimit };
