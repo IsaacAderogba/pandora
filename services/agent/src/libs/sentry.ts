@@ -7,7 +7,7 @@ Sentry.init({
   serverName: "agent",
   integrations: [new Tracing.Integrations.Express()],
   tracesSampleRate: 1.0,
-  enabled: true,
+  enabled: process.env.NODE_ENV === "production",
 });
 
 export { Sentry };
