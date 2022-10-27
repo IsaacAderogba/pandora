@@ -18,6 +18,6 @@ export const upsertDoc = async <
     update: doc,
   });
 
-  debug(`${new Date().toISOString()} ${doc.type} upserted: ${doc.title}`);
+  debug(`${doc.type.toLowerCase()} upserted, ${doc.title}`);
   return doc;
 };

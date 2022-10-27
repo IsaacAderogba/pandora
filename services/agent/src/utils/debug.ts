@@ -9,5 +9,5 @@ const WorkerColors: { [key: string]: string } = {
 
 const color = WorkerColors[process.env.WORKER];
 export const debug: typeof console.log = (...args) => {
-  console.log(color, `[${process.env.WORKER}]`, ...args);
+  console.log(color, `[${new Date().toISOString()}:${process.env.WORKER}]`, ...args);
 };
