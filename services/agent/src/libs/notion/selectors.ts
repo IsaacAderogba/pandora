@@ -1,4 +1,5 @@
 import { DocType } from "@prisma/client";
+import { truncate } from "../../utils/text";
 import { isPageTitleProperty } from "./narrowings";
 import {
   CommentDoc,
@@ -18,7 +19,7 @@ export const $databaseDoc = (database: DatabaseObjectResponse): DatabaseDoc => {
     id: database.id,
     parentId: null,
     type: DocType.DATABASE,
-    title: $databaseTitle(database),
+    title: truncate($databaseTitle(database), 255),
     data: database,
     metadata: {},
     createdAt: new Date(database.created_time),
@@ -39,7 +40,7 @@ export const $pageDoc = (
     id: page.id,
     parentId: $parentId(page.parent),
     type: DocType.PAGE,
-    title: $pageTitle(page),
+    title: truncate($pageTitle(page), 255),
     data: page,
     metadata,
     createdAt: new Date(page.created_time),
@@ -60,7 +61,7 @@ export const $commentDoc = (comment: CommentObjectResponse): CommentDoc => {
     id: comment.id,
     parentId: $parentId(comment.parent),
     type: DocType.COMMENT,
-    title: $commentTitle(comment),
+    title: truncate($commentTitle(comment), 255),
     data: comment,
     metadata: {},
     createdAt: new Date(comment.created_time),
@@ -81,7 +82,7 @@ export const $blockDoc = (
     id: block.id,
     parentId: $parentId(block.parent),
     type: DocType.BLOCK,
-    title: $blockText(block),
+    title: truncate($blockText(block), 255),
     data: block,
     metadata,
     createdAt: new Date(block.created_time),
