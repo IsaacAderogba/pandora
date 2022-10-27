@@ -1,17 +1,17 @@
 import {
-  BlockResponse,
-  CommentResponse,
-  DatabaseResponse,
-  DocResponse,
-  PageResponse,
+  BlockObjectResponse,
+  CommentObjectResponse,
+  DatabaseObjectResponse,
+  DocObjectResponse,
+  PageObjectResponse,
 } from "../libs/notion/types";
 
-interface Strategy<T> {
+export interface Strategy<T> {
   run: (initial: T, accumulated: T) => T | Promise<T>;
 }
 
-export type DocStrategy = Strategy<DocResponse>;
-export type DatabaseStrategy = Strategy<DatabaseResponse>;
-export type PageStrategy = Strategy<PageResponse>;
-export type BlockStrategy = Strategy<BlockResponse>;
-export type CommentStrategy = Strategy<CommentResponse>;
+export type DocStrategy = Strategy<DocObjectResponse>;
+export type DatabaseStrategy = Strategy<DatabaseObjectResponse>;
+export type PageStrategy = Strategy<PageObjectResponse>;
+export type BlockStrategy = Strategy<BlockObjectResponse>;
+export type CommentStrategy = Strategy<CommentObjectResponse>;
