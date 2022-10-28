@@ -145,12 +145,12 @@ class Notion {
     loadMore: (cursor: string | undefined) => Promise<PaginationResult<T>>
   ) {
     const documents: T[] = [];
-    let start_cursor: string | undefined;
+    let start_cursor: string | undefined | null;
 
     do {
-      const result = await loadMore(start_cursor);
+      const result = await loadMore(start_cursor ?? undefined);
       documents.push(...result.results);
-      if (result.next) start_cursor = result.next;
+      start_cursor = result.next;
     } while (start_cursor);
 
     return documents;

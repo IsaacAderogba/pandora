@@ -3,8 +3,10 @@ import { RateLimiter } from "limiter";
 import { Constructor } from "../utils/types";
 import { delay } from "../utils/delay";
 import { debug } from "../utils/debug";
+import { rejectAfterTimeout } from "../utils/timeout";
 
 const Key = "rate:limiter";
+const timeoutMs = 1000 * 60;
 
 interface RateLimiterProps {
   points: number;
@@ -35,10 +37,15 @@ function rateLimiter({ points, duration }: RateLimiterProps) {
         let retries = retryAttempts;
         do {
           try {
-            debug("[before-tokens]");
+            debug("[limiter-removeTokens]", `${target.name}.${key}`);
             await limiter.removeTokens(points);
-            debug("[after-tokens]");
-            return await fn.apply(this, args);
+            debug("[limiter-args]", `${target.name}.${key}`, ...args);
+            const result = await rejectAfterTimeout(
+              fn.apply(this, args),
+              timeoutMs
+            );
+            debug("[limiter-result]", `${target.name}.${key}`);
+            return result;
           } catch (err) {
             if (retries <= 0) throw err;
             debug("[before-delay]", retries);
