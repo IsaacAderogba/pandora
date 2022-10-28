@@ -11,7 +11,7 @@ import {
 import { Doc } from "@prisma/client";
 
 type DatabaseResponse = DatabaseObjectResponse | PartialDatabaseObjectResponse;
-type DatabaseDoc = Document<DatabaseObjectResponse>;
+type DatabaseDoc = Document<DatabaseObjectResponse, { pageIds: string[] }>;
 export type { DatabaseDoc, DatabaseResponse, DatabaseObjectResponse };
 
 type PageResponse = PageObjectResponse | PartialPageObjectResponse;

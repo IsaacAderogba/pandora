@@ -3,7 +3,6 @@ import { upsertComment } from "../documents/comment";
 import { upsertDatabase } from "../documents/database";
 import { upsertPage } from "../documents/page";
 import { notion } from "../libs/notion/client";
-import { DatabaseObjectResponse } from "../libs/notion/types";
 import { withError } from "../libs/sentry";
 
 export const syncNotion = async () => {
@@ -19,14 +18,19 @@ const syncWorkspace = async () => {
 
   for (const database of databases) {
     await withError(async () => {
-      await syncDatabase(database);
+      await syncDatabase(database.id, async (pageIds) => {
+        await upsertDatabase(database, { pageIds });
+      });
     });
   }
 };
 
-const syncDatabase = async (db: DatabaseObjectResponse) => {
-  await upsertDatabase(db);
-  const pages = await notion.pageListAll({ database_id: db.id });
+const syncDatabase = async (
+  id: string,
+  onSave: (pageIds: string[]) => Promise<void>
+) => {
+  const pages = await notion.pageListAll({ database_id: id });
+  await onSave(pages.map((page) => page.id));
 
   for (const page of pages) {
     await withError(async () => {

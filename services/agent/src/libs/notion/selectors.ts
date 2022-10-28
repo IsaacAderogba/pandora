@@ -14,14 +14,17 @@ import {
 } from "./types";
 
 // database selectors
-export const $databaseDoc = (database: DatabaseObjectResponse): DatabaseDoc => {
+export const $databaseDoc = (
+  database: DatabaseObjectResponse,
+  metadata: DatabaseDoc["metadata"]
+): DatabaseDoc => {
   return {
     id: database.id,
     parentId: null,
     type: DocType.DATABASE,
     title: truncate($databaseTitle(database), 255),
     data: database,
-    metadata: {},
+    metadata,
     createdAt: new Date(database.created_time),
     updatedAt: new Date(database.last_edited_time),
   };

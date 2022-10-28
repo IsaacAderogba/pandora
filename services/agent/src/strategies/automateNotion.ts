@@ -3,7 +3,6 @@ import { upsertComment } from "../documents/comment";
 import { upsertDatabase } from "../documents/database";
 import { upsertPage } from "../documents/page";
 import { notion } from "../libs/notion/client";
-import { DatabaseObjectResponse } from "../libs/notion/types";
 import { withError } from "../libs/sentry";
 import { BlockStrategy } from "./BlockStrategies";
 import { CommentStrategy } from "./CommentStrategies";
@@ -29,17 +28,20 @@ const automateWorkspace = async () => {
 
   for (const database of databases) {
     await withError(async () => {
-      await automateDatabase(database);
+      await automateDatabase(database.id, async (pageIds) => {
+        const initial = await upsertDatabase(database, { pageIds });
+        await maybeRunStrategies(initial, databaseStrategies);
+      });
     });
   }
 };
 
-const automateDatabase = async (db: DatabaseObjectResponse) => {
-  const initial = await upsertDatabase(db);
-  await maybeRunStrategies(initial, databaseStrategies);
-
+const automateDatabase = async (
+  id: string,
+  onSave: (pageIds: string[]) => Promise<void>
+) => {
   const pages = await notion.pageListAll({
-    database_id: db.id,
+    database_id: id,
     filter: {
       or: [
         {
@@ -49,6 +51,7 @@ const automateDatabase = async (db: DatabaseObjectResponse) => {
       ],
     },
   });
+  await onSave(pages.map((page) => page.id));
 
   for (const page of pages) {
     await withError(async () => {
