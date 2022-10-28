@@ -8,6 +8,13 @@ authors = ["Isaac Aderogba <isaacaderogba1@gmail.com>"]
 python = "^3.9"
 fastapi = "^0.85.1"
 uvicorn = {extras = ["standard"], version = "^0.18.3"}
+sklearn = "^0.0"
+pandas = "^1.5.1"
+numpy = "^1.23.4"
+spacy = "^3.4.1"
+
+[tool.poetry.dependencies.en_core_web_md]
+url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.4.1/en_core_web_md-3.4.1.tar.gz"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

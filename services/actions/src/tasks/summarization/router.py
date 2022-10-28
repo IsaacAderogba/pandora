@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from src.libs.agent.types import Paragraph
+from src.libs.spacy.nlp import nlp
 
 summarization_router = APIRouter()
 
