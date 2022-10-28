@@ -1,4 +1,4 @@
-import { Optional } from "../../utils/type";
+import { Nullable } from "../../utils/types";
 
 export type Id = string;
 
@@ -24,11 +24,11 @@ export type Color =
   | "red_background";
 
 export type Annotation = {
-  bold: Optional<boolean>;
-  italic: Optional<boolean>;
-  strikethrough: Optional<boolean>;
-  underline: Optional<boolean>;
-  code: Optional<boolean>;
+  bold: Nullable<boolean>;
+  italic: Nullable<boolean>;
+  strikethrough: Nullable<boolean>;
+  underline: Nullable<boolean>;
+  code: Nullable<boolean>;
   color: Color;
 };
 
@@ -40,20 +40,20 @@ export type Text = {
   text: TextBody;
   annotations: Annotation;
   plain_text: string;
-  href: Optional<string>;
+  href: Nullable<string>;
 };
 
 export type ParagraphBody = {
   text: Text[];
-  color: Optional<Color>;
+  color: Nullable<Color>;
 };
 
 export type Paragraph = {
-  id: Optional<Id>;
+  id: Nullable<Id>;
   paragraph: ParagraphBody;
 };
 
 export type Paper = {
-  id: Optional<Id>;
+  id: Nullable<Id>;
   paragraphs: Paragraph[];
 };
