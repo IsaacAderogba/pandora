@@ -1,3 +1,7 @@
+import { Optional } from "../../utils/type";
+
+export type Id = string;
+
 export type Color =
   | "default"
   | "gray"
@@ -20,38 +24,36 @@ export type Color =
   | "red_background";
 
 export type Annotation = {
-  bold?: boolean;
-  italic?: boolean;
-  strikethrough?: boolean;
-  underline?: boolean;
-  code?: boolean;
-  color?: Color;
+  bold: Optional<boolean>;
+  italic: Optional<boolean>;
+  strikethrough: Optional<boolean>;
+  underline: Optional<boolean>;
+  code: Optional<boolean>;
+  color: Color;
+};
+
+export type TextBody = {
+  content: string;
 };
 
 export type Text = {
-  type: "text";
-  text: {
-    content: string;
-    link?: {
-      url: string;
-    };
-  };
+  text: TextBody;
   annotations: Annotation;
   plain_text: string;
-  href: string | null;
+  href: Optional<string>;
+};
+
+export type ParagraphBody = {
+  text: Text[];
+  color: Optional<Color>;
 };
 
 export type Paragraph = {
-  id?: string;
-  type: "paragraph";
-  paragraph: {
-    text: Text[];
-    color?: Color;
-  };
+  id: Optional<Id>;
+  paragraph: ParagraphBody;
 };
 
 export type Paper = {
-  id?: string;
-  type: "paper";
+  id: Optional<Id>;
   paragraphs: Paragraph[];
 };
