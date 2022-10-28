@@ -35,7 +35,9 @@ function rateLimiter({ points, duration }: RateLimiterProps) {
         let retries = retryAttempts;
         do {
           try {
+            debug("[before-tokens]", points);
             await limiter.removeTokens(points);
+            debug("[after-tokens]", points);
             return await fn.apply(this, args);
           } catch (err) {
             if (retries <= 0) throw err;
