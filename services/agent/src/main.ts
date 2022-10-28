@@ -28,9 +28,9 @@ if (cluster.isPrimary) {
     case Worker.Server:
       startServer();
       break;
-    // case Worker.SyncNotion:
-    //   syncNotion();
-    //   break;
+    case Worker.SyncNotion:
+      syncNotion();
+      break;
     case Worker.AutomateNotion:
       automateNotion();
       break;
