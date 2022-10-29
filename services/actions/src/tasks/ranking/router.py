@@ -13,14 +13,11 @@ class RequestBody(BaseModel):
 
 
 def rank_documents(documents: List[Document]) -> List[Document]:
-    docs: List[Document] = []
     document_sections: List[Section] = []
     document_sentences: List[Sentence] = []
     document_texts: List[str] = []
 
     for document in documents:
-        docs.append(document)
-
         sections: List[Section] = []
         section_sentences: List[Sentence] = []
         section_texts: List[str] = []
@@ -48,6 +45,7 @@ def rank_documents(documents: List[Document]) -> List[Document]:
         set_textrank(section_sentences, context, sect_sentence_texts, "section_rank")
 
     context = " ".join(document_texts)
+    set_textrank(documents, context, document_texts, "document_rank")
 
     doc_sentence_texts = [sent["text"] for sent in document_sentences]
     set_textrank(document_sentences, context, doc_sentence_texts, "document_rank")
