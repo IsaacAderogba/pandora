@@ -1,4 +1,4 @@
-import { Nullable } from "../../utils/types";
+import { Nullable, Any } from "../../utils/types";
 
 export type Id = string;
 
@@ -32,28 +32,21 @@ export type Annotation = {
   color: Color;
 };
 
-export type TextBody = {
-  content: string;
-};
-
-export type Text = {
-  text: TextBody;
+export type Text<R = Any> = {
+  text: string;
   annotations: Annotation;
-  plain_text: string;
   href: Nullable<string>;
+  metadata: R;
 };
 
-export type ParagraphBody = {
-  text: Text[];
-  color: Nullable<Color>;
-};
-
-export type Paragraph = {
+export type Section<K = Any, R = Any> = {
   id: Nullable<Id>;
-  paragraph: ParagraphBody;
+  texts: Text<R>[];
+  metadata: K;
 };
 
-export type Paper = {
+export type Document<T = Any, K = Any, R = Any> = {
   id: Nullable<Id>;
-  paragraphs: Paragraph[];
+  sections: Section<K, R>[];
+  metadata: T;
 };

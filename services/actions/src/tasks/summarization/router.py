@@ -2,14 +2,14 @@ from typing import List
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from src.libs.agent.types import Paragraph
+from src.libs.agent.types import Document
 from src.libs.spacy.nlp import nlp
 
 summarization_router = APIRouter()
 
 
 class RequestBody(BaseModel):
-    data: List[Paragraph]
+    documents: List[Document]
 
 
 @summarization_router.post("/extractive")

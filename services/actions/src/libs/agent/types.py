@@ -1,4 +1,4 @@
-from typing import List, Union, Literal, TypedDict, Optional
+from typing import Any, List, Union, Literal, TypedDict, Optional
 
 Nullable = Optional
 Id = str
@@ -33,23 +33,18 @@ class Annotation(TypedDict):
   code: Nullable[bool]
   color: Nullable[Color]
 
-class TextBody(TypedDict):
-  content: str
-
 class Text(TypedDict):
-  text: TextBody
+  text: str
   annotations: Annotation
-  plain_text: str
   href: Nullable[str]
+  metadata: Any
 
-class ParagraphBody(TypedDict):
-  text: List[Text]
-  color: Nullable[Color]
-
-class Paragraph(TypedDict):
+class Section(TypedDict):
   id: Nullable[Id]
-  paragraph: ParagraphBody
+  texts: List[Text]
+  metadata: Any
 
-class Paper(TypedDict):
+class Document(TypedDict):
   id: Nullable[Id]
-  paragraphs: List[Paragraph]
+  sections: List[Section]
+  metadata: Any
