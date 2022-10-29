@@ -1,4 +1,4 @@
-from typing import Any, List, Union, Literal, TypedDict, Optional, Type
+from typing import Any, List, Union, Literal, TypedDict, Optional
 
 Id = str
 
@@ -32,13 +32,13 @@ class Annotation(TypedDict):
   code: Optional[bool]
   color: Optional[Color]
 
-class Text(TypedDict):
+class Sentence(TypedDict):
   text: str
   metadata: Any
 
 class Section(TypedDict):
   id: Optional[Id]
-  texts: List[Text]
+  sentences: List[Sentence]
   metadata: Any
 
 class Document(TypedDict):

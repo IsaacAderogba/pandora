@@ -32,14 +32,14 @@ export type Annotation = {
   color: Color;
 };
 
-export type Text<R = Any> = {
+export type Sentence<R = Any> = {
   text: string;
   metadata: R;
 };
 
 export type Section<K = Any, R = Any> = {
   id: Nullable<Id>;
-  texts: Text<R>[];
+  sentences: Sentence<R>[];
   metadata: K;
 };
 
