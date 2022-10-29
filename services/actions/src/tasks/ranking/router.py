@@ -13,21 +13,21 @@ class RequestBody(BaseModel):
 
 
 def rank_documents(documents: List[Document]) -> List[Document]:
-    local_documents: List[Document] = []
-    global_sections: List[Section] = []
+    docs: List[Document] = []
+    document_sections: List[Section] = []
     document_sentences: List[Sentence] = []
-    document_contexts: List[str] = []
+    document_texts: List[str] = []
 
     for document in documents:
-        local_documents.append(document)
+        docs.append(document)
 
-        local_sections: List[Section] = []
+        sections: List[Section] = []
         section_sentences: List[Sentence] = []
-        section_contexts: List[str] = []
+        section_texts: List[str] = []
 
         for section in document["sections"]:
-            global_sections.append(section)
-            local_sections.append(section)
+            document_sections.append(section)
+            sections.append(section)
 
             sentences: List[Sentence] = []
             for sent in section["sentences"]:
@@ -35,20 +35,22 @@ def rank_documents(documents: List[Document]) -> List[Document]:
                 section_sentences.append(sent)
                 sentences.append(sent)
 
-            sent_texts = [sent["text"] for sent in sentences]
-            context = " ".join(sent_texts)
-            section_contexts.append(context)
-            set_textrank(sentences, context, sent_texts, "sentence_rank")
+            sentence_texts = [sent["text"] for sent in sentences]
+            context = " ".join(sentence_texts)
+            section_texts.append(context)
+            set_textrank(sentences, context, sentence_texts, "sentence_rank")
 
-        context = " ".join(section_contexts)
-        document_contexts.append(context)
+        context = " ".join(section_texts)
+        document_texts.append(context)
+        set_textrank(sections, context, section_texts, "section_rank")
 
-        sect_sent_texts = [sent["text"] for sent in section_sentences]
-        set_textrank(section_sentences, context, sect_sent_texts, "section_rank")
+        sect_sentence_texts = [sent["text"] for sent in section_sentences]
+        set_textrank(section_sentences, context, sect_sentence_texts, "section_rank")
 
-    context = " ".join(document_contexts)
-    doc_sent_texts = [sent["text"] for sent in document_sentences]
-    set_textrank(document_sentences, context, doc_sent_texts, "document_rank")
+    context = " ".join(document_texts)
+
+    doc_sentence_texts = [sent["text"] for sent in document_sentences]
+    set_textrank(document_sentences, context, doc_sentence_texts, "document_rank")
 
     return documents
 
@@ -63,7 +65,7 @@ def set_textrank(
     for i, rank in enumerate(ranks):
         if data[i]["metadata"] is None:
             data[i]["metadata"] = {}
-            
+
         data[i]["metadata"][key] = rank
 
 
