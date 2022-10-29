@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from src.libs.agent.types import Document, Section, Sentence
-from src.tasks.ranking.algorithms import textrank
+from src.tasks.ranking.textrank import textrank
 
 ranking_router = APIRouter()
 
@@ -47,6 +47,8 @@ def rank_documents(documents: List[Document]) -> List[Document]:
         set_textrank(section_sentences, context, sect_sent_texts, "section_rank")
 
     context = " ".join(document_contexts)
+    doc_sent_texts = [sent["text"] for sent in document_sentences]
+    set_textrank(document_sentences, context, doc_sent_texts, "document_rank")
 
     return documents
 
