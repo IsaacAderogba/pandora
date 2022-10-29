@@ -15,12 +15,12 @@ class RequestBody(BaseModel):
 def rank_documents(documents: List[Document]) -> List[Document]:
     document_sections: List[Section] = []
     document_sentences: List[Sentence] = []
-    section_contexts: List[str] = []
+    document_texts: List[str] = []
 
     for document in documents:
         sections: List[Section] = []
         section_sentences: List[Sentence] = []
-        sentence_contexts: List[str] = []
+        section_texts: List[str] = []
 
         for section in document["sections"]:
             document_sections.append(section)
@@ -32,26 +32,29 @@ def rank_documents(documents: List[Document]) -> List[Document]:
                 section_sentences.append(sent)
                 sentences.append(sent)
 
-            texts = [sent["text"] for sent in sentences]
-            sentence_context = " ".join(texts)
-            sentence_contexts.append(sentence_context)
-            set_textrank(sentences, sentence_context, texts, "sentence_rank")
+            sentence_texts = [sent["text"] for sent in sentences]
+            sentence_context = " ".join(sentence_texts)
+            section_texts.append(sentence_context)
+            set_textrank(sentences, sentence_context, sentence_texts, "sentence_rank")
 
-        section_context = " ".join(sentence_contexts)
-        section_contexts.append(section_context)
-        set_textrank(sections, section_context, sentence_contexts, "section_rank")
+        section_context = " ".join(section_texts)
+        document_texts.append(section_context)
+        set_textrank(sections, section_context, section_texts, "section_rank")
 
-        texts = [sent["text"] for sent in section_sentences]
-        set_textrank(section_sentences, section_context, texts, "section_rank")
+        sentence_texts = [sent["text"] for sent in section_sentences]
+        set_textrank(section_sentences, section_context, sentence_texts, "section_rank")
 
-    context = " ".join(section_contexts)
-    set_textrank(documents, context, section_contexts, "document_rank")
+    document_context = " ".join(document_texts)
+    set_textrank(documents, document_context, document_texts, "document_rank")
 
-    # doc_section_sentences = [sect["sentences"] for sect in document_sections]   
-    # i need to get the section texts 
+    section_texts: List[str] = []
+    for section in document_sections:
+        sentence_texts = [sent["text"] for sent in section["sentences"]]
+        section_texts.append(" ".join(sentence_texts))
+    set_textrank(document_sections, document_context, section_texts, "document_rank")
 
-    texts = [sent["text"] for sent in document_sentences]
-    set_textrank(document_sentences, context, texts, "document_rank")
+    sentence_texts = [sent["text"] for sent in document_sentences]
+    set_textrank(document_sentences, document_context, sentence_texts, "document_rank")
 
     return documents
 
