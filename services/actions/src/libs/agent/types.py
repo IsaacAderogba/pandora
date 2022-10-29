@@ -1,6 +1,5 @@
-from typing import Any, List, Union, Literal, TypedDict, Optional
+from typing import Any, List, Union, Literal, TypedDict, Optional, Type
 
-Nullable = Optional
 Id = str
 
 Color = Union[
@@ -26,25 +25,23 @@ Color = Union[
 ]
 
 class Annotation(TypedDict):
-  bold: Nullable[bool]
-  italic: Nullable[bool]
-  strikethrough: Nullable[bool]
-  underline: Nullable[bool]
-  code: Nullable[bool]
-  color: Nullable[Color]
+  bold: Optional[bool]
+  italic: Optional[bool]
+  strikethrough: Optional[bool]
+  underline: Optional[bool]
+  code: Optional[bool]
+  color: Optional[Color]
 
 class Text(TypedDict):
   text: str
-  annotations: Annotation
-  href: Nullable[str]
   metadata: Any
 
 class Section(TypedDict):
-  id: Nullable[Id]
+  id: Optional[Id]
   texts: List[Text]
   metadata: Any
 
 class Document(TypedDict):
-  id: Nullable[Id]
+  id: Optional[Id]
   sections: List[Section]
   metadata: Any

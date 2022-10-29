@@ -34,8 +34,6 @@ export type Annotation = {
 
 export type Text<R = Any> = {
   text: string;
-  annotations: Annotation;
-  href: Nullable<string>;
   metadata: R;
 };
 
