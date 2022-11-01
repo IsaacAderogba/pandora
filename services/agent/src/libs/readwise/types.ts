@@ -4,7 +4,7 @@ export interface Book {
   id: number;
   title: string;
   author: string;
-  category: string;
+  category: BookCategory;
   source: string;
   num_highlights: number;
   last_highlight_at: string;
@@ -15,6 +15,26 @@ export interface Book {
   asin: string;
   tags: Tag[];
 }
+
+export interface BookListParameters {
+  page_size: number;
+  page: number;
+  source: string;
+  num_highlights: number;
+  num_highlights__lt: number;
+  num_highlights__gt: number;
+  updated__lt: string;
+  updated__gt: string
+  last_highlight_at__lt: string;
+  last_highlight_at__gt: string;
+}
+
+export type BookCategory =
+  | "books"
+  | "articles"
+  | "tweets"
+  | "supplementals"
+  | "podcasts";
 
 export interface Highlight {
   id: number;
@@ -39,4 +59,11 @@ export interface Highlight {
 export interface Tag {
   id: number;
   name: string;
+}
+
+export type PaginationResult<T> = {
+  count: number;
+  next: Nullable<string>;
+  previous: Nullable<string>;
+  results: T[];
 }
