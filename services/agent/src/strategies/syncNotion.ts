@@ -1,7 +1,7 @@
-import { upsertBlock } from "../documents/block";
-import { upsertComment } from "../documents/comment";
-import { upsertDatabase } from "../documents/database";
-import { upsertPage } from "../documents/page";
+import { upsertBlock } from "../models/documents/block";
+import { upsertComment } from "../models/documents/comment";
+import { upsertDatabase } from "../models/documents/database";
+import { upsertPage } from "../models/documents/page";
 import { notion } from "../libs/notion/client";
 import { withError } from "../libs/sentry";
 
