@@ -16,3 +16,8 @@ export const capitallize = (str: string) => {
 export const stripMarkdown = (str: string) => {
   return removeMd(str);
 };
+
+export const removeTrailingDot = (str: string) => {
+  if (str[str.length - 1] === ".") str = str.slice(0, -1);
+  return str;
+};

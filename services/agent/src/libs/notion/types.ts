@@ -65,4 +65,5 @@ export type {
   ListBlockChildrenParameters,
   GetPagePropertyResponse,
   RichTextItemResponse,
+  CreatePageParameters,
 } from "@notionhq/client/build/src/api-endpoints";

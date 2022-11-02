@@ -20,6 +20,7 @@ import {
   CommentObjectResponse,
   PaginationResult,
   GetPagePropertyResponse,
+  CreatePageParameters,
 } from "./types";
 
 @rateLimiter({ duration: 1000, points: 1 })
@@ -81,6 +82,15 @@ class Notion {
       results: results.filter(isPageObjectResponse),
       next: next_cursor,
     };
+  }
+
+  @rateLimit({ points: 1 })
+  async pageCreate(params: CreatePageParameters): Promise<PageObjectResponse> {
+    const result = await this.client.pages.create(params);
+    if (!isPageObjectResponse(result)) {
+      throw this.error("Expected page response object");
+    }
+    return result;
   }
 
   @rateLimit({ points: 1 })
