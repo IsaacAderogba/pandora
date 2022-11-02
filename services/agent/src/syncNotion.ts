@@ -1,9 +1,9 @@
-import { upsertBlock } from "../models/documents/block";
-import { upsertComment } from "../models/documents/comment";
-import { upsertDatabase } from "../models/documents/database";
-import { upsertPage } from "../models/documents/page";
-import { notion } from "../libs/notion/client";
-import { withError } from "../libs/sentry";
+import { upsertBlock } from "./models/documents/block";
+import { upsertComment } from "./models/documents/comment";
+import { upsertDatabase } from "./models/documents/database";
+import { upsertPage } from "./models/documents/page";
+import { notion } from "./libs/notion/client";
+import { withError } from "./libs/sentry";
 
 export const syncNotion = async () => {
   while (true) {

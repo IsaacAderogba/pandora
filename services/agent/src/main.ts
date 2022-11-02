@@ -3,10 +3,10 @@ dotenv.config();
 
 import "./libs/sentry";
 import cluster from "node:cluster";
-import { syncNotion } from "./strategies/syncNotion";
+import { syncNotion } from "./syncNotion";
 import { startServer } from "./server";
 import { Worker } from "./utils/enums";
-import { automateNotion } from "./strategies/automateNotion";
+import { automateNotion } from "./automateNotion";
 
 if (cluster.isPrimary) {
   cluster.fork({ WORKER: Worker.Server });
