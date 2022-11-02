@@ -5,12 +5,12 @@ export const syncReadwise = async () => {
   // while (true) {
     await withError(async () => {
       const lastSyncedAt = new Date();
-      await syncLatest();
+      await syncAccount();
     });
   // }
 };
 
-const syncLatest = async () => {
+const syncAccount = async () => {
   const books = await readwise.exportListAll();
   console.log("response", books.length)
 };
