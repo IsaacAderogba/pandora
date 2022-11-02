@@ -1,5 +1,11 @@
 import axios from "axios";
-import { RankingTextRankBody, RankingTextRankResult } from "./api";
+import { requestWithRetry } from "../../utils/request";
+import {
+  RankingTextRankBody,
+  RankingTextRankResult,
+  SummarizationExtractiveBody,
+  SummarizationExtractiveResult,
+} from "./api";
 
 class Actions {
   client = axios.create({
@@ -10,23 +16,35 @@ class Actions {
   });
 
   get ranking() {
-    return {};
+    return {
+      textrank: this.rankingTextrank,
+    };
   }
 
-  rankingTextrank = async (
+  private rankingTextrank = async (
     body: RankingTextRankBody
   ): Promise<RankingTextRankResult> => {
-    const { data } = await this.client.post<RankingTextRankResult>(
-      `/ranking/textrank`,
-      { body }
-    );
-
-    return data;
+    return this.postRequest("/ranking/textrank", body);
   };
 
   get summarization() {
-    return {};
+    return {
+      extractive: this.summarizationExtractive,
+    };
   }
+
+  private summarizationExtractive = async (
+    body: SummarizationExtractiveBody
+  ): Promise<SummarizationExtractiveResult> => {
+    return this.postRequest("/summarization/extractive", body);
+  };
+
+  private postRequest = async <T, K>(path: string, body: K): Promise<T> => {
+    return requestWithRetry<T>(async () => {
+      const { data } = await this.client.post<T>(path, { body });
+      return data;
+    });
+  };
 }
 
 export const actions = new Actions();
