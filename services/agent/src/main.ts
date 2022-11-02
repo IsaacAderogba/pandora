@@ -13,7 +13,7 @@ if (cluster.isPrimary) {
   cluster.fork({ WORKER: Worker.Server });
   cluster.fork({ WORKER: Worker.SyncNotion });
   cluster.fork({ WORKER: Worker.AutomateNotion });
-  cluster.fork({ WORKER: Worker.SyncReadwise });
+  // cluster.fork({ WORKER: Worker.SyncReadwise });
 
   cluster.on("exit", () => {
     for (const id in cluster.workers) {
@@ -27,17 +27,17 @@ if (cluster.isPrimary) {
   const worker = process.env.WORKER;
 
   switch (worker) {
-    // case Worker.Server:
-    //   startServer();
-    //   break;
-    // case Worker.SyncNotion:
-    //   syncNotion();
-    //   break;
-    // case Worker.AutomateNotion:
-    //   automateNotion();
-    //   break;
-    case Worker.SyncReadwise:
-      syncReadwise();
+    case Worker.Server:
+      startServer();
       break;
+    case Worker.SyncNotion:
+      syncNotion();
+      break;
+    case Worker.AutomateNotion:
+      automateNotion();
+      break;
+    // case Worker.SyncReadwise:
+    //   syncReadwise();
+    //   break;
   }
 }
