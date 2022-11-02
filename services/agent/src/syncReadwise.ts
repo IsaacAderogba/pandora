@@ -39,12 +39,20 @@ const syncBook = async (book: Book) => {
 
   const page = await fetchSourcePage(book.id.toString());
   if (page) {
-    console.log("exists");
-    const blocks = await notion.blockListAll({ block_id: page.id });
+    await updateSourcePage(page, book, sortedHighlights, highlightSummaries);
   } else {
-    console.log("doesn't exist", book);
     await createSourcePage(book, sortedHighlights, highlightSummaries);
   }
+};
+
+const updateSourcePage = async (
+  page: PageObjectResponse,
+  book: Book,
+  highlights: Highlight[],
+  summaries: HighlightSummaries
+): Promise<PageObjectResponse> => {
+  const blocks = await notion.blockListAll({ block_id: page.id })
+  
 };
 
 const createSourcePage = async (
@@ -74,22 +82,30 @@ const createSourcePage = async (
     children: [
       { table_of_contents: {} },
       { divider: {} },
-      ...highlights.flatMap(({ id, text, note }) => {
-        let heading = $documentText(summaries[id]).join(" ").trim();
-        heading = capitallize(stripMarkdown(removeTrailingDot(heading)));
-        heading = `${heading} (${id})`;
-
-        let paragraph = [text, note || ""].filter(Boolean).join(" ");
-        paragraph = stripMarkdown(paragraph);
-
-        return [
-          { heading_3: { rich_text: [{ text: { content: heading } }] } },
-          { paragraph: { rich_text: [{ text: { content: paragraph } }] } },
-        ];
-      }),
+      ...createHighlights(highlights, summaries),
     ],
   });
 };
+
+export const createHighlights = (
+  highlights: Highlight[],
+  summaries: HighlightSummaries
+) => {
+  return highlights.flatMap(({ id, text, note }) => {
+    let heading = $documentText(summaries[id]).join(" ").trim();
+    heading = capitallize(stripMarkdown(removeTrailingDot(heading)));
+    heading = `${heading} (${id})`;
+
+    let paragraph = [text, note || ""].filter(Boolean).join(" ");
+    paragraph = stripMarkdown(paragraph);
+
+    return [
+      { heading_3: { rich_text: [{ text: { content: heading } }] } },
+      { paragraph: { rich_text: [{ text: { content: paragraph } }] } },
+    ];
+  });
+};
+
 const fetchSourcePage = async (
   sourceId: string
 ): Promise<PageObjectResponse | undefined> => {
