@@ -8,7 +8,12 @@ import { readwise } from "./libs/readwise/client";
 import { Book, Highlight } from "./libs/readwise/types";
 import { sortHighlights } from "./libs/readwise/utils";
 import { withError } from "./libs/sentry";
-import { capitallize, removeTrailingDot, stripMarkdown } from "./utils/text";
+import {
+  capitallize,
+  removeTrailingDot,
+  startCase,
+  stripMarkdown,
+} from "./utils/text";
 
 export const syncReadwise = async () => {
   // while (true) {
@@ -37,7 +42,7 @@ const syncBook = async (book: Book) => {
     console.log("exists");
     const blocks = await notion.blockListAll({ block_id: page.id });
   } else {
-    console.log("doesn't exist");
+    console.log("doesn't exist", book);
     await createSourcePage(book, sortedHighlights, highlightSummaries);
   }
 };
@@ -47,7 +52,7 @@ const createSourcePage = async (
   highlights: Highlight[],
   summaries: HighlightSummaries
 ): Promise<PageObjectResponse> => {
-  const title = `${book.author}, in ${book.title}`;
+  const title = startCase(book.author) + ", in" + startCase(book.title);
   const externalId = book.id.toString();
 
   return await notion.pageCreate({
@@ -62,6 +67,9 @@ const createSourcePage = async (
         type: "rich_text",
         rich_text: [{ type: "text", text: { content: externalId } }],
       },
+      URL: { url: book.source_url },
+      Status: { status: { name: "Progress" } },
+      Stage: { select: { name: "0" } },
     },
     children: [
       { table_of_contents: {} },

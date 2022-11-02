@@ -1,3 +1,4 @@
+import lodash from "lodash";
 import removeMd from "remove-markdown";
 
 export const truncate = (str: string, length: number) => {
@@ -9,9 +10,9 @@ export const truncate = (str: string, length: number) => {
   return str;
 };
 
-export const capitallize = (str: string) => {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-};
+export const startCase = (str: string) => lodash.startCase(str);
+
+export const capitallize = (str: string) => lodash.capitalize(str);
 
 export const stripMarkdown = (str: string) => {
   return removeMd(str);
