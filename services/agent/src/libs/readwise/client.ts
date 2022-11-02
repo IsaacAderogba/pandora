@@ -1,8 +1,15 @@
 import axios from "axios";
 import { rateLimit, rateLimiter } from "../limiter";
-import { Book, BookListParameters, PaginationResult } from "./types";
+import {
+  Book,
+  BookListParameters,
+  ExportedBook,
+  ExportParameters,
+  ExportResult,
+  PaginationResult,
+} from "./types";
 
-@rateLimiter({ duration: 3000, points: 1 })
+@rateLimiter({ duration: 5000, points: 1 })
 class Readwise {
   client = axios.create({
     headers: {
@@ -22,17 +29,35 @@ class Readwise {
 
     return data;
   }
+
+  async exportListAll(
+    params: Partial<ExportParameters> = {}
+  ): Promise<ExportedBook[]> {
+    const results: ExportedBook[] = [];
+    let pageCursor: string | null | undefined;
+
+    do {
+      const result = await this.exportList({
+        ...params,
+        pageCursor: pageCursor ?? undefined,
+      });
+      results.push(...result.results);
+      pageCursor = result.nextPageCursor;
+    } while (pageCursor);
+
+    return results;
+  }
+
+  @rateLimit({ points: 1 })
+  async exportList(
+    params: Partial<ExportParameters> = {}
+  ): Promise<ExportResult> {
+    const { data } = await this.client.get<ExportResult>(`/export`, {
+      params,
+    });
+
+    return data;
+  }
 }
 
 export const readwise = new Readwise();
-
-/**
- * Endpoints to focus on:
- * bookList
- * bookTagsList
- *
- * highlightExport
- * highlightList
- * highlightTagsList
- *
- */

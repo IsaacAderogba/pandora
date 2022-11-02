@@ -5,6 +5,7 @@ const WorkerColors: { [key: string]: string } = {
   [Worker.Server]: colors.fg.blue,
   [Worker.SyncNotion]: colors.fg.green,
   [Worker.AutomateNotion]: colors.fg.red,
+  [Worker.SyncReadwise]: colors.fg.cyan,
 };
 
 const color = WorkerColors[process.env.WORKER];

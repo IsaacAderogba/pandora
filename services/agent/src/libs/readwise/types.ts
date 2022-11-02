@@ -16,6 +16,22 @@ export interface Book {
   tags: Tag[];
 }
 
+export interface ExportedBook {
+  user_book_id: number;
+  title: string;
+  author: string;
+  readable_title: string;
+  source: string;
+  cover_image_url: string;
+  unique_url: string;
+  book_tags: Tag[];
+  category: BookCategory;
+  readwise_url: string;
+  source_url: string;
+  asin: string;
+  highlights: Highlight[];
+}
+
 export interface BookListParameters {
   page_size: number;
   page: number;
@@ -24,7 +40,7 @@ export interface BookListParameters {
   num_highlights__lt: number;
   num_highlights__gt: number;
   updated__lt: string;
-  updated__gt: string
+  updated__gt: string;
   last_highlight_at__lt: string;
   last_highlight_at__gt: string;
 }
@@ -56,6 +72,17 @@ export interface Highlight {
   readwise_url: string;
 }
 
+export interface ExportParameters {
+  updatedAfter: string;
+  ids: string[];
+  pageCursor: string;
+}
+
+export type ExportResult = {
+  count: number;
+  nextPageCursor: Nullable<string>;
+  results: ExportedBook[];
+};
 export interface Tag {
   id: number;
   name: string;
@@ -66,4 +93,4 @@ export type PaginationResult<T> = {
   next: Nullable<string>;
   previous: Nullable<string>;
   results: T[];
-}
+};
