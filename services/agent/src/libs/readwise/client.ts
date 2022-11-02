@@ -6,25 +6,56 @@ import {
   ExportedBook,
   ExportParameters,
   ExportResult,
+  Highlight,
+  HighlightListParameters,
   PaginationResult,
 } from "./types";
 
 @rateLimiter({ duration: 6000, points: 1 })
 class Readwise {
+  baseURL = "https://readwise.io/api/v2";
   client = axios.create({
     headers: {
       "Content-Type": "application/json",
       authorization: `Token ${process.env.READWISE_SECRET}`,
     },
-    baseURL: "https://readwise.io/api/v2",
   });
 
+  async bookListAll(
+    params: Partial<HighlightListParameters> = {}
+  ): Promise<Book[]> {
+    return this.listAll((url) => this.bookList({ ...params, url }));
+  }
+
   @rateLimit({ points: 1 })
-  async bookList(
-    params: Partial<BookListParameters> = {}
-  ): Promise<PaginationResult<Book>> {
-    const { data } = await this.client.get<PaginationResult<Book>>(`/books`, {
-      params,
+  async bookList({
+    url = `${this.baseURL}/books`,
+    page_size = 1000,
+    ...params
+  }: Partial<BookListParameters> = {}): Promise<PaginationResult<Book>> {
+    const { data } = await this.client.get<PaginationResult<Book>>(url, {
+      params: { page_size, ...params },
+    });
+
+    return data;
+  }
+
+  async highlightListAll(
+    params: Partial<HighlightListParameters> = {}
+  ): Promise<Highlight[]> {
+    return this.listAll((url) => this.highlightList({ ...params, url }));
+  }
+
+  @rateLimit({ points: 1 })
+  async highlightList({
+    url = `${this.baseURL}/highlights`,
+    page_size = 1000,
+    ...params
+  }: Partial<HighlightListParameters> = {}): Promise<
+    PaginationResult<Highlight>
+  > {
+    const { data } = await this.client.get<PaginationResult<Highlight>>(url, {
+      params: { page_size, ...params },
     });
 
     return data;
@@ -52,11 +83,29 @@ class Readwise {
   async exportList(
     params: Partial<ExportParameters> = {}
   ): Promise<ExportResult> {
-    const { data } = await this.client.get<ExportResult>(`/export`, {
-      params,
-    });
+    const { data } = await this.client.get<ExportResult>(
+      `${this.baseURL}/export`,
+      {
+        params,
+      }
+    );
 
     return data;
+  }
+
+  private async listAll<T>(
+    loadMore: (cursor: string | undefined) => Promise<PaginationResult<T>>
+  ) {
+    const documents: T[] = [];
+    let nextUrl: string | undefined | null;
+
+    do {
+      const result = await loadMore(nextUrl ?? undefined);
+      documents.push(...result.results);
+      nextUrl = result.next;
+    } while (nextUrl);
+
+    return documents;
   }
 }
 

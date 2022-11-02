@@ -41,7 +41,7 @@ class Actions {
 
   private postRequest = async <T, K>(path: string, body: K): Promise<T> => {
     return requestWithRetry<T>(async () => {
-      const { data } = await this.client.post<T>(path, { body });
+      const { data } = await this.client.post<T>(path, body);
       return data;
     });
   };

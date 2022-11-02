@@ -1,10 +1,12 @@
+import util from "util";
 import { actions } from "./libs/actions/client";
 import { Document } from "./libs/actions/types";
 import { tokenizeSentences } from "./libs/compromise/utils";
 import { readwise } from "./libs/readwise/client";
-import { ExportedBook } from "./libs/readwise/types";
+import { Book, Highlight } from "./libs/readwise/types";
 import { sortHighlights } from "./libs/readwise/utils";
 import { withError } from "./libs/sentry";
+import { capitallize, stripMarkdown } from "./utils/text";
 
 export const syncReadwise = async () => {
   // while (true) {
@@ -16,37 +18,48 @@ export const syncReadwise = async () => {
 };
 
 const syncAccount = async () => {
-  const books = await readwise.exportListAll();
+  const books = await readwise.bookListAll();
 
-  for (const book of books) {
-    await withError(async () => await syncBook(book));
-  }
+  // for (const book of books) {
+  await withError(async () => await syncBook(books[0]));
+  // }
 };
 
-const syncBook = async (book: ExportedBook) => {
-  const highlights = sortHighlights(book.highlights);
+const syncBook = async (book: Book) => {
+  const highlights = await readwise.highlightListAll({ book_id: book.id });
+  const summarizedHighlights = await summarizeHighlights(highlights);
+};
 
-  const document: Document = {
-    id: book.user_book_id,
-    metadata: null,
-    sections: highlights.map(({ id, text, note }) => {
-      return {
-        id: id,
-        metadata: null,
-        sentences: [
-          ...tokenizeSentences(text),
-          ...tokenizeSentences(note || ""),
-        ],
-      };
-    }),
-  };
+const summarizeHighlights = async (highlights: Highlight[]) => {
+  const documents: Document[] = highlights.map(({ id, text, note }) => {
+    return {
+      id,
+      metadata: null,
+      sections: [
+        {
+          id: null,
+          metadata: null,
+          sentences: [
+            ...tokenizeSentences(text),
+            ...tokenizeSentences(note || ""),
+          ].map((text) => ({
+            metadata: null,
+            text: capitallize(stripMarkdown(text)),
+          })),
+        },
+      ],
+    };
+  });
 
-  console.log(document.sections);
+  const results = await actions.summarization.extractive({
+    options: { num_sentences: 1 },
+    documents,
+  });
 
-  // const subPageSummaries = await actions.summarization.extractive({
-  //   options: { num_sentences: 1 },
-  //   documents: [document],
-  // });
+  const summarizedDocuments: { [id: string]: Document } = {};
+  for (const result of results) {
+    summarizedDocuments[result.id!] = result;
+  }
 
-  // console.log(book.title, subPageSummaries);
+  return summarizedDocuments;
 };

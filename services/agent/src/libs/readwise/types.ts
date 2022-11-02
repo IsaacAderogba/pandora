@@ -35,6 +35,7 @@ export interface ExportedBook {
 export interface BookListParameters {
   page_size: number;
   page: number;
+  url: string;
   source: string;
   num_highlights: number;
   num_highlights__lt: number;
@@ -70,6 +71,17 @@ export interface Highlight {
   is_favorite: boolean;
   is_discard: boolean;
   readwise_url: string;
+}
+
+export interface HighlightListParameters {
+  page_size: number;
+  page: number;
+  url: string;
+  book_id: number;
+  updated__lt: string;
+  updated__gt: string;
+  highlight_at__lt: string;
+  highlight_at__gt: string;
 }
 
 export interface ExportParameters {
