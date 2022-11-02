@@ -23,7 +23,11 @@ def summarize_documents_extractively(
     summarized_documents: list[Document] = []
 
     for ranked_document in rank_documents(documents):
-        document: Document = {**ranked_document, "sections": []}
+        document: Document = {
+            "id": ranked_document["id"],
+            "metadata": ranked_document["metadata"],
+            "sections": [],
+        }
 
         count = 0
         cutoff = extract_rank_cutoff(ranked_document, limit)

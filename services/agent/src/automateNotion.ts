@@ -1,15 +1,15 @@
-import { upsertBlock } from "../documents/block";
-import { upsertComment } from "../documents/comment";
-import { upsertDatabase } from "../documents/database";
-import { upsertPage } from "../documents/page";
-import { notion } from "../libs/notion/client";
-import { $databaseTitle } from "../libs/notion/selectors";
-import { withError } from "../libs/sentry";
-import { BlockStrategy } from "./BlockStrategies";
-import { CommentStrategy } from "./CommentStrategies";
-import { DatabaseStrategy } from "./DatabaseStrategies";
-import { PageStrategy } from "./PageStrategies";
-import { Strategy } from "./Strategy";
+import { upsertBlock } from "./models/documents/block";
+import { upsertComment } from "./models/documents/comment";
+import { upsertDatabase } from "./models/documents/database";
+import { upsertPage } from "./models/documents/page";
+import { notion } from "./libs/notion/client";
+import { $databaseTitle } from "./libs/notion/selectors";
+import { withError } from "./libs/sentry";
+import { BlockStrategy } from "./models/documents/BlockStrategies";
+import { CommentStrategy } from "./models/documents/CommentStrategies";
+import { DatabaseStrategy } from "./models/documents/DatabaseStrategies";
+import { PageStrategy } from "./models/documents/PageStrategies";
+import { Strategy } from "./models/documents/BaseStrategy";
 
 const databaseStrategies: DatabaseStrategy[] = [];
 const pageStrategies: PageStrategy[] = [];

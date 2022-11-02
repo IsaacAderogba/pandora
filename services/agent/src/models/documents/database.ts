@@ -1,5 +1,5 @@
-import { $databaseDoc } from "../libs/notion/selectors";
-import { DatabaseDoc, DatabaseObjectResponse } from "../libs/notion/types";
+import { $databaseDoc } from "../../libs/notion/selectors";
+import { DatabaseDoc, DatabaseObjectResponse } from "../../libs/notion/types";
 import { upsertDoc } from "./base";
 
 export const upsertDatabase = async (

@@ -24,6 +24,11 @@ model Doc {
   @@index([vector], type: Gin)
 }
 
+model Cache {
+  key   String @id
+  value Json   @db.JsonB
+}
+
 enum DocType {
   DATABASE
   PAGE

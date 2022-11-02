@@ -3,9 +3,9 @@ import {
   CommentDoc,
   DatabaseDoc,
   PageDoc,
-} from "../libs/notion/types";
-import { prisma } from "../libs/prisma";
-import { debug } from "../utils/debug";
+} from "../../libs/notion/types";
+import { prisma } from "../../libs/prisma";
+import { debug } from "../../utils/debug";
 
 export const upsertDoc = async <
   T extends DatabaseDoc | PageDoc | CommentDoc | BlockDoc
