@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pandora-config
+data:
+  SOURCES_DATABASE_ID: a36078a2-b386-4014-90189c1b01540048
+  PANDORA_ICON_URL: https://firebasestorage.googleapis.com/v0/b/evernotion.appspot.com/o/pandora.png?alt=media&token=c460412b-d772-4221-9079-296210b4bcd0
+

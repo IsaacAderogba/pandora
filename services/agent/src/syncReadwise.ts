@@ -28,6 +28,10 @@ const syncAccount = async () => {
 const syncBook = async (book: Book) => {
   const highlights = await readwise.highlightListAll({ book_id: book.id });
   const summarizedHighlights = await summarizeHighlights(highlights);
+
+  /**
+   * 
+   */
 };
 
 const summarizeHighlights = async (highlights: Highlight[]) => {
