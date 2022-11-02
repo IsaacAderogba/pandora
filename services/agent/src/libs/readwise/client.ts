@@ -9,7 +9,7 @@ import {
   PaginationResult,
 } from "./types";
 
-@rateLimiter({ duration: 5000, points: 1 })
+@rateLimiter({ duration: 6000, points: 1 })
 class Readwise {
   client = axios.create({
     headers: {
