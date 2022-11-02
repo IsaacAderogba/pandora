@@ -8,7 +8,7 @@ import {
 } from "./api";
 
 class Actions {
-  client = axios.create({
+  private client = axios.create({
     headers: {
       "Content-Type": "application/json",
     },

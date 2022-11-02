@@ -1,6 +1,6 @@
 from typing import Any, List, Union, Literal, TypedDict, Optional
 
-Id = str
+Id = Union[str, int]
 
 Color = Union[
     Literal["default"],
@@ -24,24 +24,28 @@ Color = Union[
     Literal["red_background"],
 ]
 
+
 class Annotation(TypedDict):
-  bold: Optional[bool]
-  italic: Optional[bool]
-  strikethrough: Optional[bool]
-  underline: Optional[bool]
-  code: Optional[bool]
-  color: Optional[Color]
+    bold: Optional[bool]
+    italic: Optional[bool]
+    strikethrough: Optional[bool]
+    underline: Optional[bool]
+    code: Optional[bool]
+    color: Optional[Color]
+
 
 class Sentence(TypedDict):
-  text: str
-  metadata: Any
+    text: str
+    metadata: Any
+
 
 class Section(TypedDict):
-  id: Optional[Id]
-  sentences: List[Sentence]
-  metadata: Any
+    id: Optional[Id]
+    sentences: List[Sentence]
+    metadata: Any
+
 
 class Document(TypedDict):
-  id: Optional[Id]
-  sections: List[Section]
-  metadata: Any
+    id: Optional[Id]
+    sections: List[Section]
+    metadata: Any
