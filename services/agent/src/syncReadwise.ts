@@ -14,6 +14,7 @@ import { sortHighlights } from "./libs/readwise/utils";
 import { withError } from "./libs/sentry";
 import {
   capitallize,
+  extractMarkdownUrls,
   removeTrailingDot,
   startCase,
   stripMarkdown,
@@ -110,14 +111,10 @@ const createSourcePage = async (
         rich_text: [{ type: "text", text: { content: externalId } }],
       },
       URL: { url: book.source_url },
-      Status: { status: { name: "Done" } },
+      Status: { status: { name: "Progress" } },
       Stage: { select: { name: "0" } },
     },
-    children: [
-      { table_of_contents: {} },
-      { divider: {} },
-      ...createHighlights(highlights, summaries),
-    ],
+    children: createHighlights(highlights, summaries),
   });
 };
 
@@ -125,12 +122,14 @@ export const createHighlights = (
   highlights: Highlight[],
   summaries: HighlightSummaries
 ): Exclude<CreatePageParameters["children"], undefined> => {
+  console.log(highlights);
   return highlights.flatMap(({ id, text, note }) => {
     let heading = $documentText(summaries[id]).join(" ").trim();
     heading = capitallize(stripMarkdown(removeTrailingDot(heading)));
 
     let paragraph = [text, note || ""].filter(Boolean).join(" ");
     paragraph = stripMarkdown(paragraph);
+    const urls = extractMarkdownUrls(text);
 
     return [
       {
@@ -147,6 +146,7 @@ export const createHighlights = (
           ],
           children: [
             { paragraph: { rich_text: [{ text: { content: paragraph } }] } },
+            ...urls.map((url) => ({ image: { external: { url } } })),
           ],
         },
       },
