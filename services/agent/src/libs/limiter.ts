@@ -37,20 +37,20 @@ function rateLimiter({ points, duration }: RateLimiterProps) {
         let retries = retryAttempts;
         do {
           try {
-            debug("[limiter-removeTokens]", `${target.name}.${key}`);
+            // debug("[limiter-removeTokens]", `${target.name}.${key}`);
             await limiter.removeTokens(points);
-            debug("[limiter-args]", `${target.name}.${key}`, ...args);
+            // debug("[limiter-args]", `${target.name}.${key}`, ...args);
             const result = await rejectAfterTimeout(
               fn.apply(this, args),
               timeoutMs
             );
-            debug("[limiter-result]", `${target.name}.${key}`);
+            // debug("[limiter-result]", `${target.name}.${key}`);
             return result;
           } catch (err) {
             if (retries <= 0) throw err;
-            debug("[before-delay]", retries);
+            // debug("[before-delay]", retries);
             await delay(retryDelay);
-            debug("[after-delay]", retries);
+            // debug("[after-delay]", retries);
           }
         } while (retries-- > 0);
       };

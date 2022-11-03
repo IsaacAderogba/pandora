@@ -85,7 +85,7 @@ export const $blockDoc = (
     id: block.id,
     parentId: $parentId(block.parent),
     type: DocType.BLOCK,
-    title: truncate($blockText(block), 255),
+    title: truncate($blockText(block), 255).split("\n")[0],
     data: block,
     metadata,
     createdAt: new Date(block.created_time),
