@@ -68,5 +68,5 @@ export type {
   CreatePageParameters,
   UpdateBlockParameters,
   AppendBlockChildrenParameters,
-  DeleteBlockParameters
+  DeleteBlockParameters,
 } from "@notionhq/client/build/src/api-endpoints";

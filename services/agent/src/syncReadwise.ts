@@ -3,7 +3,11 @@ import { $documentText } from "./libs/actions/selectors";
 import { Document } from "./libs/actions/types";
 import { tokenizeSentences } from "./libs/compromise/utils";
 import { notion } from "./libs/notion/client";
-import { PageObjectResponse } from "./libs/notion/types";
+import {
+  BlockObjectResponse,
+  CreatePageParameters,
+  PageObjectResponse,
+} from "./libs/notion/types";
 import { readwise } from "./libs/readwise/client";
 import { Book, Highlight } from "./libs/readwise/types";
 import { sortHighlights } from "./libs/readwise/utils";
@@ -39,7 +43,7 @@ const syncBook = async (book: Book) => {
 
   const page = await fetchSourcePage(book.id.toString());
   if (page) {
-    await updateSourcePage(page, book, sortedHighlights, highlightSummaries);
+    await updateSourcePage(page, sortedHighlights, highlightSummaries);
   } else {
     await createSourcePage(book, sortedHighlights, highlightSummaries);
   }
@@ -47,12 +51,42 @@ const syncBook = async (book: Book) => {
 
 const updateSourcePage = async (
   page: PageObjectResponse,
-  book: Book,
   highlights: Highlight[],
   summaries: HighlightSummaries
-): Promise<PageObjectResponse> => {
-  const blocks = await notion.blockListAll({ block_id: page.id })
-  
+): Promise<void> => {
+  const blocks = await notion.blockListAll({ block_id: page.id });
+  const idToBlock = new Map<string, BlockObjectResponse>();
+
+  for (const block of blocks) {
+    if (block.type !== "callout") continue;
+
+    const callout = block.callout.rich_text[0];
+    if (callout.type === "text" && callout.text.link?.url) {
+      const id = new URL(callout.text.link.url).searchParams.get("id");
+      if (id) idToBlock.set(id, block);
+    }
+  }
+
+  // append new highlights
+  const highlightsToCreate = highlights.filter(
+    ({ id }) => idToBlock.has(id.toString()) === false
+  );
+
+  if (highlightsToCreate.length) {
+    await notion.blockAppend({
+      block_id: page.id,
+      children: createHighlights(highlightsToCreate, summaries),
+    });
+  }
+
+  // delete missing highlights
+  for (const { id } of highlights) {
+    idToBlock.delete(id.toString());
+  }
+
+  for (const [_, block] of idToBlock) {
+    await notion.blockDelete({ block_id: block.id });
+  }
 };
 
 const createSourcePage = async (
@@ -76,7 +110,7 @@ const createSourcePage = async (
         rich_text: [{ type: "text", text: { content: externalId } }],
       },
       URL: { url: book.source_url },
-      Status: { status: { name: "Progress" } },
+      Status: { status: { name: "Done" } },
       Stage: { select: { name: "0" } },
     },
     children: [
@@ -90,18 +124,32 @@ const createSourcePage = async (
 export const createHighlights = (
   highlights: Highlight[],
   summaries: HighlightSummaries
-) => {
+): Exclude<CreatePageParameters["children"], undefined> => {
   return highlights.flatMap(({ id, text, note }) => {
     let heading = $documentText(summaries[id]).join(" ").trim();
     heading = capitallize(stripMarkdown(removeTrailingDot(heading)));
-    heading = `${heading} (${id})`;
 
     let paragraph = [text, note || ""].filter(Boolean).join(" ");
     paragraph = stripMarkdown(paragraph);
 
     return [
-      { heading_3: { rich_text: [{ text: { content: heading } }] } },
-      { paragraph: { rich_text: [{ text: { content: paragraph } }] } },
+      {
+        callout: {
+          icon: { type: "emoji", emoji: "📝" },
+          color: "default",
+          rich_text: [
+            {
+              text: {
+                content: heading,
+                link: { url: `https://readwise.io?id=${id}` },
+              },
+            },
+          ],
+          children: [
+            { paragraph: { rich_text: [{ text: { content: paragraph } }] } },
+          ],
+        },
+      },
     ];
   });
 };
