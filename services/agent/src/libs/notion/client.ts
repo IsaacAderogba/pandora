@@ -20,6 +20,10 @@ import {
   CommentObjectResponse,
   PaginationResult,
   GetPagePropertyResponse,
+  CreatePageParameters,
+  UpdateBlockParameters,
+  AppendBlockChildrenParameters,
+  DeleteBlockParameters
 } from "./types";
 
 @rateLimiter({ duration: 1000, points: 1 })
@@ -84,6 +88,15 @@ class Notion {
   }
 
   @rateLimit({ points: 1 })
+  async pageCreate(params: CreatePageParameters): Promise<PageObjectResponse> {
+    const result = await this.client.pages.create(params);
+    if (!isPageObjectResponse(result)) {
+      throw this.error("Expected page response object");
+    }
+    return result;
+  }
+
+  @rateLimit({ points: 1 })
   async pageRetrieve(params: GetPageParameters): Promise<PageObjectResponse> {
     const result = await this.client.pages.retrieve(params);
     if (!isPageObjectResponse(result)) {
@@ -120,6 +133,44 @@ class Notion {
       results: results.filter(isBlockObjectResponse),
       next: next_cursor,
     };
+  }
+
+  @rateLimit({ points: 1 })
+  async blockAppend(
+    params: AppendBlockChildrenParameters
+  ): Promise<PaginationResult<BlockObjectResponse>> {
+    const { results, next_cursor } = await this.client.blocks.children.append(
+      params
+    );
+
+    return {
+      results: results.filter(isBlockObjectResponse),
+      next: next_cursor,
+    };
+  }
+
+  @rateLimit({ points: 1 })
+  async blockUpdate(
+    params: UpdateBlockParameters
+  ): Promise<BlockObjectResponse> {
+    const result = await this.client.blocks.update(params);
+    if (!isBlockObjectResponse(result)) {
+      throw this.error("Expected block response object");
+    }
+
+    return result;
+  }
+
+  @rateLimit({ points: 1 })
+  async blockDelete(
+    params: DeleteBlockParameters
+  ): Promise<BlockObjectResponse> {
+    const result = await this.client.blocks.delete(params);
+    if (!isBlockObjectResponse(result)) {
+      throw this.error("Expected block response object");
+    }
+
+    return result;
   }
 
   async commentListAll(

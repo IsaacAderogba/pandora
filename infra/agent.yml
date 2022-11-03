@@ -45,6 +45,9 @@ spec:
             limits:
               cpu: 500m
               memory: 768Mi
+          envFrom:
+            - configMapRef:
+                name: pandora-config
           env:
             - name: ACTIONS_URL
               value: "http://pandora-actions-srv:8000"
