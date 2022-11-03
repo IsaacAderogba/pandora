@@ -2,6 +2,7 @@ import { actions } from "./libs/actions/client";
 import { $documentText } from "./libs/actions/selectors";
 import { Document } from "./libs/actions/types";
 import { tokenizeSentences } from "./libs/compromise/utils";
+import { chunk } from "./libs/lodash/array";
 import { notion } from "./libs/notion/client";
 import {
   BlockObjectResponse,
@@ -21,19 +22,19 @@ import {
 } from "./utils/text";
 
 export const syncReadwise = async () => {
-  // while (true) {
-  await withError(async () => {
-    await syncAccount();
-  });
-  // }
+  while (true) {
+    await withError(async () => {
+      await syncAccount();
+    });
+  }
 };
 
 const syncAccount = async () => {
   const books = await readwise.bookListAll();
 
-  // for (const book of books) {
-  await withError(async () => await syncBook(books[0]));
-  // }
+  for (const book of books) {
+    await withError(async () => await syncBook(book));
+  }
 };
 
 const syncBook = async (book: Book) => {
@@ -47,6 +48,44 @@ const syncBook = async (book: Book) => {
     await updateSourcePage(page, sortedHighlights, highlightSummaries);
   } else {
     await createSourcePage(book, sortedHighlights, highlightSummaries);
+  }
+};
+
+const createSourcePage = async (
+  book: Book,
+  highlights: Highlight[],
+  summaries: HighlightSummaries
+): Promise<void> => {
+  const title = startCase(book.author) + ", in " + startCase(book.title);
+  const externalId = book.id.toString();
+
+  let page: PageObjectResponse | undefined;
+  for (const chunkedHighlights of chunk(highlights, 50)) {
+    if (page) {
+      await notion.blockAppend({
+        block_id: page.id,
+        children: createHighlights(chunkedHighlights, summaries),
+      });
+    } else {
+      page = await notion.pageCreate({
+        parent: { database_id: process.env.SOURCES_DATABASE_ID },
+        icon: { external: { url: process.env.PANDORA_ICON_URL } },
+        properties: {
+          Name: {
+            type: "title",
+            title: [{ type: "text", text: { content: title } }],
+          },
+          "External Id": {
+            type: "rich_text",
+            rich_text: [{ type: "text", text: { content: externalId } }],
+          },
+          URL: { url: book.source_url },
+          Status: { status: { name: "Progress" } },
+          Stage: { select: { name: "0" } },
+        },
+        children: createHighlights(chunkedHighlights, summaries),
+      });
+    }
   }
 };
 
@@ -90,34 +129,6 @@ const updateSourcePage = async (
   }
 };
 
-const createSourcePage = async (
-  book: Book,
-  highlights: Highlight[],
-  summaries: HighlightSummaries
-): Promise<PageObjectResponse> => {
-  const title = startCase(book.author) + ", in" + startCase(book.title);
-  const externalId = book.id.toString();
-
-  return await notion.pageCreate({
-    parent: { database_id: process.env.SOURCES_DATABASE_ID },
-    icon: { external: { url: process.env.PANDORA_ICON_URL } },
-    properties: {
-      Name: {
-        type: "title",
-        title: [{ type: "text", text: { content: title } }],
-      },
-      "External Id": {
-        type: "rich_text",
-        rich_text: [{ type: "text", text: { content: externalId } }],
-      },
-      URL: { url: book.source_url },
-      Status: { status: { name: "Progress" } },
-      Stage: { select: { name: "0" } },
-    },
-    children: createHighlights(highlights, summaries),
-  });
-};
-
 export const createHighlights = (
   highlights: Highlight[],
   summaries: HighlightSummaries
@@ -127,7 +138,7 @@ export const createHighlights = (
     let heading = $documentText(summaries[id]).join(" ").trim();
     heading = capitallize(stripMarkdown(removeTrailingDot(heading)));
 
-    let paragraph = [text, note || ""].filter(Boolean).join(" ");
+    let paragraph = [text, note || ""].filter(Boolean).join(" ").trim();
     paragraph = stripMarkdown(paragraph);
     const urls = extractMarkdownUrls(text);
 
