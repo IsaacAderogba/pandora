@@ -146,7 +146,7 @@ export const createHighlights = (
           ],
           children: [
             { paragraph: { rich_text: [{ text: { content: paragraph } }] } },
-            ...urls.map((url) => ({ image: { external: { url } } })),
+            ...urls.map((url) => ({ embed: { url } })),
           ],
         },
       },
