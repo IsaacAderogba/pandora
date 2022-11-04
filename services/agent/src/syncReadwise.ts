@@ -140,8 +140,9 @@ export const createHighlights = (
   summaries: HighlightSummaries
 ): Exclude<CreatePageParameters["children"], undefined> => {
   return highlights.flatMap(({ id, text, note }) => {
-    let heading = $documentText(summaries[id]).join(" ").trim();
-    heading = capitallize(stripMarkdown(removeTrailingDot(heading)));
+    let summary = $documentText(summaries[id]).join(" ").trim();
+    summary = capitallize(stripMarkdown(removeTrailingDot(summary)));
+    const heading = note ? removeTrailingDot(note?.trim()) : summary;
 
     let paragraph = [text, note || ""].filter(Boolean).join(" ").trim();
     paragraph = stripMarkdown(paragraph);
