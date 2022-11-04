@@ -61,8 +61,7 @@ export interface Highlight {
   note: Nullable<string>;
   color: string;
   highlighted_at: string;
-  created_at: string;
-  updated_at: string;
+  updated: string;
   external_id: string;
   end_location: Nullable<string>;
   url: Nullable<string>;

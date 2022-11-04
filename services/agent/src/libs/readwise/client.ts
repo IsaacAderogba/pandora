@@ -11,7 +11,7 @@ import {
   PaginationResult,
 } from "./types";
 
-@rateLimiter({ duration: 6000, points: 1 })
+@rateLimiter({ duration: 3000, points: 1 })
 class Readwise {
   baseURL = "https://readwise.io/api/v2";
   client = axios.create({

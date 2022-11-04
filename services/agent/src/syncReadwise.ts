@@ -32,6 +32,7 @@ export const syncReadwise = async () => {
 
 const syncAccount = async () => {
   const books = await readwise.bookListAll();
+
   for (const book of books) {
     await withError(async () => await syncBook(book));
   }
@@ -39,18 +40,25 @@ const syncAccount = async () => {
 
 const syncBook = async (book: Book) => {
   const highlights = await readwise.highlightListAll({ book_id: book.id });
+  const halfHourAgo = getHalfHourAgo();
+  const filteredHighlights = highlights.filter(
+    (h) => halfHourAgo > new Date(h.updated)
+  );
 
-  const highlightSummaries = await summarizeHighlights(highlights);
-  const sortedHighlights = sortHighlights(highlights);
+  const highlightsHaveSettled = filteredHighlights.length === highlights.length;
+  if (highlightsHaveSettled) {
+    const highlightSummaries = await summarizeHighlights(filteredHighlights);
+    const sortedHighlights = sortHighlights(filteredHighlights);
 
-  const page = await fetchSourcePage(book.id.toString());
-  if (page) {
-    await updateSourcePage(page, sortedHighlights, highlightSummaries);
-  } else {
-    await createSourcePage(book, sortedHighlights, highlightSummaries);
+    const page = await fetchSourcePage(book.id.toString());
+    if (page) {
+      await updateSourcePage(page, sortedHighlights, highlightSummaries);
+    } else {
+      await createSourcePage(book, sortedHighlights, highlightSummaries);
+    }
+
+    debug(`book upserted, ${book.title}`);
   }
-
-  debug(`book upserted, ${book.title}`);
 };
 
 const createSourcePage = async (
@@ -223,3 +231,5 @@ const summarizeHighlights = async (
 type HighlightSummaries = {
   [id: string]: Document;
 };
+
+const getHalfHourAgo = () => new Date(Date.now() - 1000 * 60 * 30);
