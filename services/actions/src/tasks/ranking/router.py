@@ -13,5 +13,5 @@ class RequestBody(BaseModel):
 
 
 @ranking_router.post("/textrank")
-async def extractive(body: RequestBody):
+async def textrank(body: RequestBody):
     return rank_documents(body.documents)

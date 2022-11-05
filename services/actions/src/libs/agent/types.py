@@ -35,7 +35,6 @@ class Annotation(TypedDict):
 
 
 class Sentence(TypedDict):
-    id: Optional[Id]
     text: str
     metadata: Any
 

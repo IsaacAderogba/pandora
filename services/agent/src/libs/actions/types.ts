@@ -33,7 +33,6 @@ export type Annotation = {
 };
 
 export type Sentence<R = null> = {
-  id: Nullable<Id>;
   text: string;
   metadata: R;
 };
