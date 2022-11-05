@@ -3,11 +3,9 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from src.libs.agent.types import Document
+from src.tasks.extraction.keywords import attach_keywords
 
 extraction_router = APIRouter()
-
-def attach_keywords(documents: list[Document]) -> list[Document]:
-  return documents
 
 
 class RequestBody(BaseModel):
