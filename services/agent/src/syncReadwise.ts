@@ -207,6 +207,7 @@ const summarizeHighlights = async (
             ...tokenizeSentences(text),
             ...tokenizeSentences(note || ""),
           ].map((text) => ({
+            id: null,
             metadata: null,
             text: stripMarkdown(text),
           })),
