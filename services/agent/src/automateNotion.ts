@@ -27,19 +27,21 @@ export const automateNotion = async () => {
 const automateWorkspace = async () => {
   const databases = await notion.databaseListAll({});
 
-  for (const database of databases.filter(db => $databaseTitle(db) === "Tasks")) {
+  for (const database of databases.filter(
+    (db) => $databaseTitle(db) === "Tasks"
+  )) {
     await withError(async () => {
-      await automateDatabase(database.id, async (pageIds) => {
-        const initial = await upsertDatabase(database, { pageIds });
-        await maybeRunStrategies(initial, databaseStrategies);
-      });
+      await automateDatabase(database.id, databaseStrategies, async (pageIds) =>
+        upsertDatabase(database, { pageIds })
+      );
     });
   }
 };
 
-const automateDatabase = async (
+const automateDatabase = async <T>(
   id: string,
-  onSave: (pageIds: string[]) => Promise<void>
+  strategies: Strategy<T>[],
+  onSave: (pageIds: string[]) => Promise<T>
 ) => {
   const pages = await notion.pageListAll({
     database_id: id,
@@ -52,44 +54,53 @@ const automateDatabase = async (
       ],
     },
   });
-  await onSave(pages.map((page) => page.id));
 
+  const saved = await onSave(pages.map((page) => page.id));
   for (const page of pages) {
     await withError(async () => {
-      await automateDocTree(page.id, async (commentIds, blockIds) => {
-        const initial = await upsertPage(page, { commentIds, blockIds });
-        await maybeRunStrategies(initial, pageStrategies);
-      });
+      await automateDocTree(
+        page.id,
+        pageStrategies,
+        async (commentIds, blockIds) =>
+          upsertPage(page, { commentIds, blockIds })
+      );
     });
   }
+
+  await maybeRunStrategies(saved, strategies);
 };
 
-const automateDocTree = async (
+const automateDocTree = async <T>(
   id: string,
-  onSave: (commentIds: string[], blockIds: string[]) => Promise<void>
+  strategies: Strategy<T>[],
+  onSave: (commentIds: string[], blockIds: string[]) => Promise<T>
 ): Promise<void> => {
   const comments = await notion.commentListAll({ block_id: id });
   const blocks = await notion.blockListAll({ block_id: id });
-  await onSave(
+  const saved = await onSave(
     comments.map((c) => c.id),
     blocks.map((b) => b.id)
   );
 
   for (const comment of comments) {
     await withError(async () => {
-      const initial = await upsertComment(comment);
-      await maybeRunStrategies(initial, commentStrategies);
+      const saved = await upsertComment(comment);
+      await maybeRunStrategies(saved, commentStrategies);
     });
   }
 
   for (const block of blocks) {
     await withError(async () => {
-      await automateDocTree(block.id, async (commentIds, blockIds) => {
-        const initial = await upsertBlock(block, { commentIds, blockIds });
-        await maybeRunStrategies(initial, blockStrategies);
-      });
+      await automateDocTree(
+        block.id,
+        blockStrategies,
+        async (commentIds, blockIds) =>
+          upsertBlock(block, { commentIds, blockIds })
+      );
     });
   }
+
+  await maybeRunStrategies(saved, strategies);
 };
 
 const maybeRunStrategies = async <T>(
