@@ -4,5 +4,6 @@ import { upsertDoc } from "./base";
 
 export const upsertPage = async (
   page: PageObjectResponse,
-  metadata: PageDoc["metadata"]
-) => upsertDoc($pageDoc(page, metadata));
+  metadata: PageDoc["metadata"],
+  parentId: string,
+) => upsertDoc($pageDoc(page, metadata, parentId));

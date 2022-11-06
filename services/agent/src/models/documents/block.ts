@@ -4,5 +4,6 @@ import { upsertDoc } from "./base";
 
 export const upsertBlock = async (
   block: BlockObjectResponse,
-  metadata: BlockDoc["metadata"]
-) => upsertDoc($blockDoc(block, metadata));
+  metadata: BlockDoc["metadata"],
+  parentId: string
+) => upsertDoc($blockDoc(block, metadata, parentId));

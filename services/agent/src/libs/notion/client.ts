@@ -23,7 +23,8 @@ import {
   CreatePageParameters,
   UpdateBlockParameters,
   AppendBlockChildrenParameters,
-  DeleteBlockParameters
+  DeleteBlockParameters,
+  UpdatePageParameters,
 } from "./types";
 
 @rateLimiter({ duration: 1000, points: 1 })
@@ -76,6 +77,21 @@ class Notion {
     );
   }
 
+  async pageFindExternal(
+    databaseId: string,
+    externalId: string
+  ): Promise<PageObjectResponse | undefined> {
+    const { results } = await notion.pageList({
+      database_id: databaseId,
+      filter: {
+        property: "External Id",
+        rich_text: { contains: externalId },
+      },
+    });
+
+    return results[0];
+  }
+
   @rateLimit({ points: 1 })
   async pageList(
     params: QueryDatabaseParameters
@@ -90,6 +106,15 @@ class Notion {
   @rateLimit({ points: 1 })
   async pageCreate(params: CreatePageParameters): Promise<PageObjectResponse> {
     const result = await this.client.pages.create(params);
+    if (!isPageObjectResponse(result)) {
+      throw this.error("Expected page response object");
+    }
+    return result;
+  }
+
+  @rateLimit({ points: 1 })
+  async pageUpdate(params: UpdatePageParameters): Promise<PageObjectResponse> {
+    const result = await this.client.pages.update(params);
     if (!isPageObjectResponse(result)) {
       throw this.error("Expected page response object");
     }

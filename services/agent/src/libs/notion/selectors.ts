@@ -1,6 +1,7 @@
 import { DocType } from "@prisma/client";
 import { truncate } from "../../utils/text";
-import { isPageTitleProperty } from "./narrowings";
+import { isPageSelectProperty, isPageTitleProperty } from "./narrowings";
+import { SelectProperty } from "./properties";
 import {
   CommentDoc,
   DatabaseDoc,
@@ -37,11 +38,12 @@ export const $databaseTitle = (database: DatabaseObjectResponse) => {
 // page selectors
 export const $pageDoc = (
   page: PageObjectResponse,
-  metadata: PageDoc["metadata"]
+  metadata: PageDoc["metadata"],
+  parentId = $parentId(page.parent)
 ): PageDoc => {
   return {
     id: page.id,
-    parentId: $parentId(page.parent),
+    parentId,
     type: DocType.PAGE,
     title: truncate($pageTitle(page), 255),
     data: page,
@@ -58,13 +60,23 @@ export const $pageTitle = (page: PageObjectResponse) => {
     .join("");
 };
 
+export const $pageStage = (
+  page: PageObjectResponse
+): SelectProperty | undefined => {
+  const select = Object.values(page.properties).find(isPageSelectProperty);
+  if (select?.select?.name === "Stage") return select;
+};
+
 // comment selectors
-export const $commentDoc = (comment: CommentObjectResponse): CommentDoc => {
+export const $commentDoc = (
+  comment: CommentObjectResponse,
+  parentId = $parentId(comment.parent)
+): CommentDoc => {
   return {
     id: comment.id,
-    parentId: $parentId(comment.parent),
+    parentId,
     type: DocType.COMMENT,
-    title: truncate($commentTitle(comment), 255),
+    title: truncate($commentText(comment), 255),
     data: comment,
     metadata: {},
     createdAt: new Date(comment.created_time),
@@ -72,18 +84,19 @@ export const $commentDoc = (comment: CommentObjectResponse): CommentDoc => {
   };
 };
 
-export const $commentTitle = (comment: CommentObjectResponse) => {
+export const $commentText = (comment: CommentObjectResponse) => {
   return $richTextsPlainText(comment.rich_text);
 };
 
 // block selectors
 export const $blockDoc = (
   block: BlockObjectResponse,
-  metadata: BlockDoc["metadata"]
+  metadata: BlockDoc["metadata"],
+  parentId = $parentId(block.parent)
 ): BlockDoc => {
   return {
     id: block.id,
-    parentId: $parentId(block.parent),
+    parentId,
     type: DocType.BLOCK,
     title: truncate($blockText(block), 255).split("\n")[0],
     data: block,

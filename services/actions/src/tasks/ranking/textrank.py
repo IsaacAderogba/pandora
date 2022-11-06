@@ -1,26 +1,26 @@
 from math import sqrt
 from typing import List, Union
 from src.libs.spacy.nlp import nlp
-from src.libs.agent.types import Document, Section, Sentence
+from src.libs.agent.types import Note, Section, Sentence
 
 
-def rank_documents(documents: List[Document]) -> List[Document]:
-    document_sections: List[Section] = []
-    document_sentences: List[Sentence] = []
-    document_texts: List[str] = []
+def rank_notes(notes: List[Note]) -> List[Note]:
+    note_sections: List[Section] = []
+    note_sentences: List[Sentence] = []
+    note_texts: List[str] = []
 
-    for document in documents:
+    for note in notes:
         sections: List[Section] = []
         section_sentences: List[Sentence] = []
         section_texts: List[str] = []
 
-        for section in document["sections"]:
-            document_sections.append(section)
+        for section in note["sections"]:
+            note_sections.append(section)
             sections.append(section)
 
             sentences: List[Sentence] = []
             for sent in section["sentences"]:
-                document_sentences.append(sent)
+                note_sentences.append(sent)
                 section_sentences.append(sent)
                 sentences.append(sent)
 
@@ -30,29 +30,29 @@ def rank_documents(documents: List[Document]) -> List[Document]:
             set_textrank(sentences, sentence_context, sentence_texts, "sentence_rank")
 
         section_context = " ".join(section_texts)
-        document_texts.append(section_context)
+        note_texts.append(section_context)
         set_textrank(sections, section_context, section_texts, "section_rank")
 
         sentence_texts = [sent["text"] for sent in section_sentences]
         set_textrank(section_sentences, section_context, sentence_texts, "section_rank")
 
-    document_context = " ".join(document_texts)
-    set_textrank(documents, document_context, document_texts, "document_rank")
+    note_context = " ".join(note_texts)
+    set_textrank(notes, note_context, note_texts, "note_rank")
 
     section_texts: List[str] = []
-    for section in document_sections:
+    for section in note_sections:
         sentence_texts = [sent["text"] for sent in section["sentences"]]
         section_texts.append(" ".join(sentence_texts))
-    set_textrank(document_sections, document_context, section_texts, "document_rank")
+    set_textrank(note_sections, note_context, section_texts, "note_rank")
 
-    sentence_texts = [sent["text"] for sent in document_sentences]
-    set_textrank(document_sentences, document_context, sentence_texts, "document_rank")
+    sentence_texts = [sent["text"] for sent in note_sentences]
+    set_textrank(note_sentences, note_context, sentence_texts, "note_rank")
 
-    return documents
+    return notes
 
 
 def set_textrank(
-    data: Union[List[Document], List[Section], List[Sentence]],
+    data: Union[List[Note], List[Section], List[Sentence]],
     context: str,
     texts: List[str],
     key: str,

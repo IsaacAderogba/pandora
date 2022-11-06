@@ -1,12 +1,12 @@
-from src.tasks.ranking.textrank import rank_documents
-from src.libs.agent.types import Document, Sentence
+from src.tasks.ranking.textrank import rank_notes
+from src.libs.agent.types import Note, Sentence
 
 
-def extract_rank_cutoff(document: Document, limit: int) -> float:
+def extract_rank_cutoff(note: Note, limit: int) -> float:
     assert limit > 0
 
     sentences: list[tuple[int, Sentence]] = []
-    for section in document["sections"]:
+    for section in note["sections"]:
         for sentence in section["sentences"]:
             sentences.append((sentence["metadata"]["section_rank"], sentence))
 
@@ -17,21 +17,21 @@ def extract_rank_cutoff(document: Document, limit: int) -> float:
     return sorted_sentences[limit - 1][0]
 
 
-def summarize_documents_extractively(
-    documents: list[Document], limit: int
-) -> list[Document]:
-    summarized_documents: list[Document] = []
+def summarize_notes_extractively(
+    notes: list[Note], limit: int
+) -> list[Note]:
+    summarized_notes: list[Note] = []
 
-    for ranked_document in rank_documents(documents):
-        document: Document = {
-            "id": ranked_document["id"],
-            "metadata": ranked_document["metadata"],
+    for ranked_note in rank_notes(notes):
+        note: Note = {
+            "id": ranked_note["id"],
+            "metadata": ranked_note["metadata"],
             "sections": [],
         }
 
         count = 0
-        cutoff = extract_rank_cutoff(ranked_document, limit)
-        for ranked_section in ranked_document["sections"]:
+        cutoff = extract_rank_cutoff(ranked_note, limit)
+        for ranked_section in ranked_note["sections"]:
             sentences: list[Sentence] = []
 
             for sentence in ranked_section["sentences"]:
@@ -43,8 +43,8 @@ def summarize_documents_extractively(
                     count += 1
 
             if len(sentences) > 0:
-                document["sections"].append({**ranked_section, "sentences": sentences})
+                note["sections"].append({**ranked_section, "sentences": sentences})
 
-        summarized_documents.append(document)
+        summarized_notes.append(note)
 
-    return summarized_documents
+    return summarized_notes

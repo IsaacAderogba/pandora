@@ -2,19 +2,19 @@ from typing import List, Union
 from fastapi import APIRouter
 
 from src.libs.spacy.nlp import nlp, stopwords
-from src.libs.agent.types import Document, Section, Sentence
+from src.libs.agent.types import Note, Section, Sentence
 
 extraction_router = APIRouter()
 
 
-def attach_keywords(documents: list[Document]) -> list[Document]:
-    document_texts: List[str] = []
+def attach_keywords(notes: list[Note]) -> list[Note]:
+    note_texts: List[str] = []
 
-    for document in documents:
+    for note in notes:
         sections: List[Section] = []
         section_texts: List[str] = []
 
-        for section in document["sections"]:
+        for section in note["sections"]:
             sections.append(section)
 
             sentences: List[Sentence] = []
@@ -27,16 +27,16 @@ def attach_keywords(documents: list[Document]) -> list[Document]:
             set_keywords(sentences, sentence_texts)
 
         section_context = " ".join(section_texts)
-        document_texts.append(section_context)
+        note_texts.append(section_context)
         set_keywords(sections, section_texts)
 
-    set_keywords(documents, document_texts)
+    set_keywords(notes, note_texts)
 
-    return documents
+    return notes
 
 
 def set_keywords(
-    data: Union[List[Document], List[Section], List[Sentence]],
+    data: Union[List[Note], List[Section], List[Sentence]],
     texts: List[str],
 ):
     for i, text in enumerate(texts):
@@ -56,23 +56,33 @@ def keywords_rank(text: str):
     results: list[tuple[str, str, float]] = []
 
     doc = nlp(text)
-    for phrase in doc._.phrases[:10]:
+
+    tags = {"NOUN", "PROPN"}
+    for phrase in doc._.phrases[:15]:
         chunk = phrase.chunks[0]
 
-        if chunk.label_ != "NP":
+        if len(chunk) < 2 or len(chunk) > 3:
             continue
-        if len(chunk) < 2:
-            continue
+
+        doc_chunk = nlp(chunk.text)
+        lemmas: list[str] = []
 
         has_stopword = False
-        for word in chunk.text.split():
-            if word.lower() in stopwords:
-                has_stopword = True
-        if has_stopword == True:
-          continue
+        has_adjective = False
+        for token in doc_chunk:
+            if token.pos_ not in tags:
+                has_adjective = True
 
-        id = chunk.lemma_.lower()
-        term = chunk.text.title()
+            if token.text.lower() in stopwords:
+                has_stopword = True
+
+            lemmas.append(token.lemma_.lower())
+
+        if has_stopword == True or has_adjective == True:
+            continue
+
+        id: str = " ".join(lemmas)
+        term = id.title()
         rank = phrase.rank
         results.append((id, term, rank))
 

@@ -1,6 +1,8 @@
 import axios from "axios";
 import { requestWithRetry } from "../../utils/request";
 import {
+  ExtractionKeywordsBody,
+  ExtractionKeywordsResult,
   RankingTextRankBody,
   RankingTextRankResult,
   SummarizationExtractiveBody,
@@ -14,6 +16,18 @@ class Actions {
     },
     baseURL: process.env.ACTIONS_URL,
   });
+
+  get extraction() {
+    return {
+      keywords: this.extractionKeywords,
+    };
+  }
+
+  private extractionKeywords = async (
+    body: ExtractionKeywordsBody
+  ): Promise<ExtractionKeywordsResult> => {
+    return this.postRequest("/extraction/keywords", body);
+  };
 
   get ranking() {
     return {

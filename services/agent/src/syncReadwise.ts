@@ -1,6 +1,6 @@
 import { actions } from "./libs/actions/client";
-import { $documentText } from "./libs/actions/selectors";
-import { Document } from "./libs/actions/types";
+import { $noteText } from "./libs/actions/selectors";
+import { Note } from "./libs/actions/types";
 import { tokenizeSentences } from "./libs/compromise/utils";
 import { chunk } from "./libs/lodash/array";
 import { notion } from "./libs/notion/client";
@@ -50,7 +50,11 @@ const syncBook = async (book: Book) => {
     const highlightSummaries = await summarizeHighlights(filteredHighlights);
     const sortedHighlights = sortHighlights(filteredHighlights);
 
-    const page = await fetchSourcePage(book.id.toString());
+    const page = await notion.pageFindExternal(
+      process.env.SOURCES_DATABASE_ID,
+      book.id.toString()
+    );
+
     if (page) {
       await updateSourcePage(page, sortedHighlights, highlightSummaries);
     } else {
@@ -148,7 +152,7 @@ export const createHighlights = (
   summaries: HighlightSummaries
 ): Exclude<CreatePageParameters["children"], undefined> => {
   return highlights.flatMap(({ id, text, note }) => {
-    let summary = $documentText(summaries[id]).join(" ").trim();
+    let summary = $noteText(summaries[id]).join(" ").trim();
     summary = capitallize(stripMarkdown(removeTrailingDot(summary)));
     const heading = note ? removeTrailingDot(note?.trim()) : summary;
 
@@ -178,24 +182,10 @@ export const createHighlights = (
   });
 };
 
-const fetchSourcePage = async (
-  sourceId: string
-): Promise<PageObjectResponse | undefined> => {
-  const { results } = await notion.pageList({
-    database_id: process.env.SOURCES_DATABASE_ID,
-    filter: {
-      property: "External Id",
-      rich_text: { equals: sourceId },
-    },
-  });
-
-  return results[0];
-};
-
 const summarizeHighlights = async (
   highlights: Highlight[]
 ): Promise<HighlightSummaries> => {
-  const documents: Document[] = highlights.map(({ id, text, note }) => {
+  const notes: Note[] = highlights.map(({ id, text, note }) => {
     return {
       id,
       metadata: null,
@@ -218,19 +208,19 @@ const summarizeHighlights = async (
 
   const results = await actions.summarization.extractive({
     options: { num_sentences: 1 },
-    documents,
+    notes,
   });
 
-  const summarizedDocuments: { [id: string]: Document } = {};
+  const summarizedNotes: { [id: string]: Note } = {};
   for (const result of results) {
-    summarizedDocuments[result.id!] = result;
+    summarizedNotes[result.id!] = result;
   }
 
-  return summarizedDocuments;
+  return summarizedNotes;
 };
 
 type HighlightSummaries = {
-  [id: string]: Document;
+  [id: string]: Note;
 };
 
 const getHalfHourAgo = () => new Date(Date.now() - 1000 * 60 * 30);

@@ -4,5 +4,8 @@ metadata:
   name: pandora-config
 data:
   SOURCES_DATABASE_ID: a36078a2-b386-4014-9018-9c1b01540048
+  KEYWORDS_DATABASE_ID: 0b24e06a-8154-4372-8de1-2aaf477fcdd9
+  TASKS_DATABASE_ID: c4482739-7df3-443e-b340-ab134c1426df
+  NOTES_DATABASE_ID: f372f883-3670-4232-8a45-bf050f72b9e3
   PANDORA_ICON_URL: https://firebasestorage.googleapis.com/v0/b/evernotion.appspot.com/o/pandora.png?alt=media&token=c460412b-d772-4221-9079-296210b4bcd0
 

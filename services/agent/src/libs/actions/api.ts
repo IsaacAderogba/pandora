@@ -1,20 +1,34 @@
-import { Document } from "./types";
+import { Note } from "./types";
 
-export type RankingTextRankBody = {
-  documents: Document[];
+export type ExtractionKeywordsBody = {
+  notes: Note[];
 };
 
-export type RankingTextRankResult = Document<
-  { document_rank: number },
-  { document_rank: number; section_rank: number },
-  { document_rank: number; section_rank: number; sentence_rank: number }
+type KeywordsMetadata = {
+  keywords: { [key: string]: { term: string; rank: number } };
+};
+
+export type ExtractionKeywordsResult = Note<
+  KeywordsMetadata,
+  KeywordsMetadata,
+  KeywordsMetadata
+>[];
+
+export type RankingTextRankBody = {
+  notes: Note[];
+};
+
+export type RankingTextRankResult = Note<
+  { note_rank: number },
+  { note_rank: number; section_rank: number },
+  { note_rank: number; section_rank: number; sentence_rank: number }
 >[];
 
 export type SummarizationExtractiveBody = {
-  documents: Document[];
+  notes: Note[];
   options: {
     num_sentences: number;
   };
 };
 
-export type SummarizationExtractiveResult = Document[];
+export type SummarizationExtractiveResult = Note[];

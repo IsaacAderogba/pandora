@@ -8,6 +8,9 @@ declare global {
       READWISE_SECRET: string;
       SENTRY_DSN: string;
       SOURCES_DATABASE_ID: string;
+      KEYWORDS_DATABASE_ID: string;
+      TASKS_DATABASE_ID: string;
+      NOTES_DATABASE_ID: string;
       WORKER: string;
     }
   }
