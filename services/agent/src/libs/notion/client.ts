@@ -24,7 +24,7 @@ import {
   UpdateBlockParameters,
   AppendBlockChildrenParameters,
   DeleteBlockParameters,
-  UpdatePageParameters
+  UpdatePageParameters,
 } from "./types";
 
 @rateLimiter({ duration: 1000, points: 1 })
@@ -85,7 +85,7 @@ class Notion {
       database_id: databaseId,
       filter: {
         property: "External Id",
-        rich_text: { equals: externalId },
+        rich_text: { contains: externalId },
       },
     });
 

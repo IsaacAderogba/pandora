@@ -12,7 +12,6 @@ import {
   PageStrategy,
 } from "./models/documents/strategies/Strategy";
 import { RelateKeywordsStrategy } from "./models/documents/strategies/RelateKeywordsStrategy";
-import { $databaseTitle } from "./libs/notion/selectors";
 
 const databaseStrategies: DatabaseStrategy[] = [];
 const pageStrategies: PageStrategy[] = [new RelateKeywordsStrategy()];
@@ -30,9 +29,7 @@ export const automateNotion = async () => {
 const automateWorkspace = async () => {
   const databases = await notion.databaseListAll({});
 
-  for (const database of databases.filter(
-    (db) => $databaseTitle(db) === "Issues"
-  )) {
+  for (const database of databases) {
     await withError(async () => {
       await automateDatabase(database.id, databaseStrategies, async (pageIds) =>
         upsertDatabase(database, { pageIds })
@@ -48,14 +45,14 @@ const automateDatabase = async <T>(
 ) => {
   const pages = await notion.pageListAll({
     database_id: id,
-    filter: {
-      or: [
-        {
-          property: "Updated At",
-          date: { after: getHourAgo().toISOString() },
-        },
-      ],
-    },
+    // filter: {
+    //   or: [
+    //     {
+    //       property: "Updated At",
+    //       date: { after: getHourAgo().toISOString() },
+    //     },
+    //   ],
+    // },
   });
 
   const saved = await onSave(pages.map((page) => page.id));

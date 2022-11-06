@@ -21,7 +21,11 @@ import {
 } from "../../../libs/notion/selectors";
 import { BlockDoc, PageDoc } from "../../../libs/notion/types";
 import { prisma } from "../../../libs/prisma";
-import { KEYWORDS_DATABASE_ID } from "../../../utils/consts";
+import {
+  KEYWORDS_DATABASE_ID,
+  NOTES_DATABASE_ID,
+  TASKS_DATABASE_ID,
+} from "../../../utils/consts";
 import { PageStrategy } from "./Strategy";
 
 export class RelateKeywordsStrategy implements PageStrategy {
@@ -39,6 +43,8 @@ export class RelateKeywordsStrategy implements PageStrategy {
 
   shouldSkipStrategy = ({ data }: PageDoc): boolean => {
     if ($pageStage(data)?.select?.name === "0") return true;
+    if ($parentId(data.parent) === KEYWORDS_DATABASE_ID) return true;
+    if ($parentId(data.parent) === KEYWORDS_DATABASE_ID) return true;
     if ($parentId(data.parent) === KEYWORDS_DATABASE_ID) return true;
     return false;
   };

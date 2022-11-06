@@ -58,7 +58,7 @@ def keywords_rank(text: str):
     doc = nlp(text)
 
     tags = {"NOUN", "PROPN"}
-    for phrase in doc._.phrases[:25]:
+    for phrase in doc._.phrases[:15]:
         chunk = phrase.chunks[0]
 
         if len(chunk) < 2 or len(chunk) > 3:
