@@ -8,11 +8,16 @@ import {
 } from "../../../libs/actions/utils";
 import { tokenizeSentences } from "../../../libs/compromise/utils";
 import { notion } from "../../../libs/notion/client";
-import { isBlockDoc, isCommentDoc } from "../../../libs/notion/narrowings";
+import {
+  isBlockDoc,
+  isCommentDoc,
+  isPageDoc,
+} from "../../../libs/notion/narrowings";
 import {
   $blockText,
   $commentText,
   $pageStage,
+  $parentId,
 } from "../../../libs/notion/selectors";
 import { BlockDoc, PageDoc } from "../../../libs/notion/types";
 import { prisma } from "../../../libs/prisma";
@@ -27,12 +32,14 @@ export class RelateKeywordsStrategy implements PageStrategy {
     const note = this.createActionNote(page, childDocs);
     const processedNote = await actions.extraction.keywords({ notes: [note] });
     const keywordIds = await this.upsertKeywordPagesRemotely(processedNote);
+    if (this.pageHasKeywords(page, keywordIds)) return page;
 
-    return page;
+    return this.updatePageRelations(page, keywordIds);
   };
 
   shouldSkipStrategy = ({ data }: PageDoc): boolean => {
     if ($pageStage(data)?.select?.name === "0") return true;
+    if ($parentId(data.parent) === KEYWORDS_DATABASE_ID) return true;
     return false;
   };
 
@@ -71,13 +78,13 @@ export class RelateKeywordsStrategy implements PageStrategy {
 
   upsertKeywordPagesRemotely = async (
     results: ExtractionKeywordsResult
-  ): Promise<Set<string>> => {
-    const keywordIds = new Set<string>();
+  ): Promise<string[]> => {
+    const keywordIds: string[] = [];
 
     for (const result of results) {
       if (!result.metadata) continue;
 
-      for (const [id, { term }] of Object.entries(result.metadata)) {
+      for (const [id, { term }] of Object.entries(result.metadata.keywords)) {
         let page = await notion.pageFindExternal(KEYWORDS_DATABASE_ID, id);
 
         if (!page) {
@@ -98,10 +105,43 @@ export class RelateKeywordsStrategy implements PageStrategy {
           });
         }
 
-        keywordIds.add(page.id);
+        keywordIds.push(page.id);
       }
     }
 
     return keywordIds;
+  };
+
+  pageHasKeywords = (page: PageDoc, keywordIds: string[]): boolean => {
+    const relationIds = new Set<string>();
+
+    for (const prop of Object.values(page.data.properties)) {
+      if (prop.type !== "relation") continue;
+      prop.relation.forEach((relation) => relationIds.add(relation.id));
+    }
+
+    return keywordIds.every((keywordId) => relationIds.has(keywordId));
+  };
+
+  updatePageRelations = async (
+    page: PageDoc,
+    keywordIds: string[]
+  ): Promise<PageDoc> => {
+    const updatedPage = await notion.pageUpdate({
+      page_id: page.id,
+      properties: {
+        Keywords: {
+          relation: keywordIds.map((id) => ({ id })),
+        },
+      },
+    });
+
+    const doc = await prisma.doc.update({
+      where: { id: page.id },
+      data: { data: updatedPage },
+    });
+
+    if (!isPageDoc(doc)) throw new Error("Expected page doc");
+    return doc;
   };
 }

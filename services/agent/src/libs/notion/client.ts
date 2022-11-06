@@ -24,6 +24,7 @@ import {
   UpdateBlockParameters,
   AppendBlockChildrenParameters,
   DeleteBlockParameters,
+  UpdatePageParameters
 } from "./types";
 
 @rateLimiter({ duration: 1000, points: 1 })
@@ -105,6 +106,15 @@ class Notion {
   @rateLimit({ points: 1 })
   async pageCreate(params: CreatePageParameters): Promise<PageObjectResponse> {
     const result = await this.client.pages.create(params);
+    if (!isPageObjectResponse(result)) {
+      throw this.error("Expected page response object");
+    }
+    return result;
+  }
+
+  @rateLimit({ points: 1 })
+  async pageUpdate(params: UpdatePageParameters): Promise<PageObjectResponse> {
+    const result = await this.client.pages.update(params);
     if (!isPageObjectResponse(result)) {
       throw this.error("Expected page response object");
     }

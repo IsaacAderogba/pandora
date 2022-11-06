@@ -4,7 +4,9 @@ export type ExtractionKeywordsBody = {
   notes: Note[];
 };
 
-type KeywordsMetadata = { [key: string]: { term: string; rank: number } };
+type KeywordsMetadata = {
+  keywords: { [key: string]: { term: string; rank: number } };
+};
 
 export type ExtractionKeywordsResult = Note<
   KeywordsMetadata,

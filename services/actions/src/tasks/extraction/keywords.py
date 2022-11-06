@@ -56,22 +56,29 @@ def keywords_rank(text: str):
     results: list[tuple[str, str, float]] = []
 
     doc = nlp(text)
-    for phrase in doc._.phrases[:10]:
+
+    tags = {"NOUN", "PROPN"}
+    for phrase in doc._.phrases[:25]:
         chunk = phrase.chunks[0]
 
-        if chunk.label_ != "NP":
+        if len(chunk) < 2 or len(chunk) > 3:
             continue
-        if len(chunk) < 2:
-            continue
+
+        doc_chunk = nlp(chunk.text)
 
         has_stopword = False
-        for word in chunk.text.split():
-            if word.lower() in stopwords:
-                has_stopword = True
-        if has_stopword == True:
-          continue
+        has_adjective = False
+        for token in doc_chunk:
+            if token.pos_ not in tags:
+                has_adjective = True
 
-        id = chunk.lemma_.lower()
+            if token.text.lower() in stopwords:
+                has_stopword = True
+
+        if has_stopword == True or has_adjective == True:
+            continue
+
+        id: str = chunk.lemma_.lower()
         term = id.title()
         rank = phrase.rank
         results.append((id, term, rank))

@@ -66,6 +66,7 @@ export type {
   GetPagePropertyResponse,
   RichTextItemResponse,
   CreatePageParameters,
+  UpdatePageParameters,
   UpdateBlockParameters,
   AppendBlockChildrenParameters,
   DeleteBlockParameters,
