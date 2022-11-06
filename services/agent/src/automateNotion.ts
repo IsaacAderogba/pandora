@@ -45,14 +45,14 @@ const automateDatabase = async <T>(
 ) => {
   const pages = await notion.pageListAll({
     database_id: id,
-    // filter: {
-    //   or: [
-    //     {
-    //       property: "Updated At",
-    //       date: { after: getHourAgo().toISOString() },
-    //     },
-    //   ],
-    // },
+    filter: {
+      or: [
+        {
+          property: "Updated At",
+          date: { after: getHourAgo().toISOString() },
+        },
+      ],
+    },
   });
 
   const saved = await onSave(pages.map((page) => page.id));
