@@ -4,11 +4,13 @@ import { upsertDatabase } from "./models/documents/database";
 import { upsertPage } from "./models/documents/page";
 import { notion } from "./libs/notion/client";
 import { withError } from "./libs/sentry";
-import { BlockStrategy } from "./models/documents/BlockStrategies";
-import { CommentStrategy } from "./models/documents/CommentStrategies";
-import { DatabaseStrategy } from "./models/documents/DatabaseStrategies";
-import { PageStrategy } from "./models/documents/PageStrategies";
-import { Strategy } from "./models/documents/BaseStrategy";
+import {
+  Strategy,
+  BlockStrategy,
+  CommentStrategy,
+  DatabaseStrategy,
+  PageStrategy,
+} from "./models/documents/strategies/Strategy";
 
 const databaseStrategies: DatabaseStrategy[] = [];
 const pageStrategies: PageStrategy[] = [];
