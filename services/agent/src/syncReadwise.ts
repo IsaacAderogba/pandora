@@ -1,5 +1,5 @@
 import { actions } from "./libs/actions/client";
-import { $documentText } from "./libs/actions/selectors";
+import { $noteText } from "./libs/actions/selectors";
 import { Note } from "./libs/actions/types";
 import { tokenizeSentences } from "./libs/compromise/utils";
 import { chunk } from "./libs/lodash/array";
@@ -152,7 +152,7 @@ export const createHighlights = (
   summaries: HighlightSummaries
 ): Exclude<CreatePageParameters["children"], undefined> => {
   return highlights.flatMap(({ id, text, note }) => {
-    let summary = $documentText(summaries[id]).join(" ").trim();
+    let summary = $noteText(summaries[id]).join(" ").trim();
     summary = capitallize(stripMarkdown(removeTrailingDot(summary)));
     const heading = note ? removeTrailingDot(note?.trim()) : summary;
 
