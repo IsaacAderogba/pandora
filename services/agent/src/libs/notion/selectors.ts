@@ -63,8 +63,9 @@ export const $pageTitle = (page: PageObjectResponse) => {
 export const $pageStage = (
   page: PageObjectResponse
 ): SelectProperty | undefined => {
-  const select = Object.values(page.properties).find(isPageSelectProperty);
-  if (select?.select?.name === "Stage") return select;
+  if (page.properties["Stage"]?.type === "select") {
+    return page.properties["Stage"];
+  }
 };
 
 // comment selectors
