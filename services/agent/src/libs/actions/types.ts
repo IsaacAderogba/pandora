@@ -43,7 +43,7 @@ export type Section<K = null, R = null> = {
   metadata: K;
 };
 
-export type Document<T = null, K = null, R = null> = {
+export type Note<T = null, K = null, R = null> = {
   id: Nullable<Id>;
   sections: Section<K, R>[];
   metadata: T;

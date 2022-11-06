@@ -1,6 +1,6 @@
 import { actions } from "./libs/actions/client";
 import { $documentText } from "./libs/actions/selectors";
-import { Document } from "./libs/actions/types";
+import { Note } from "./libs/actions/types";
 import { tokenizeSentences } from "./libs/compromise/utils";
 import { chunk } from "./libs/lodash/array";
 import { notion } from "./libs/notion/client";
@@ -195,7 +195,7 @@ const fetchSourcePage = async (
 const summarizeHighlights = async (
   highlights: Highlight[]
 ): Promise<HighlightSummaries> => {
-  const documents: Document[] = highlights.map(({ id, text, note }) => {
+  const notes: Note[] = highlights.map(({ id, text, note }) => {
     return {
       id,
       metadata: null,
@@ -218,19 +218,19 @@ const summarizeHighlights = async (
 
   const results = await actions.summarization.extractive({
     options: { num_sentences: 1 },
-    documents,
+    notes,
   });
 
-  const summarizedDocuments: { [id: string]: Document } = {};
+  const summarizedNotes: { [id: string]: Note } = {};
   for (const result of results) {
-    summarizedDocuments[result.id!] = result;
+    summarizedNotes[result.id!] = result;
   }
 
-  return summarizedDocuments;
+  return summarizedNotes;
 };
 
 type HighlightSummaries = {
-  [id: string]: Document;
+  [id: string]: Note;
 };
 
 const getHalfHourAgo = () => new Date(Date.now() - 1000 * 60 * 30);

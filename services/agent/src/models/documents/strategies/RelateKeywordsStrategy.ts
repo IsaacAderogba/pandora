@@ -13,6 +13,7 @@ export class RelateKeywordsStrategy implements PageStrategy {
      * Okay, so I have the updated page. What can I do with it?
      * 1. Make sure stage is not 0.
      * 2. Get all of its children and sub-children (don't need to be nested)
+     * 3. Create document out of child docs
      */
     throw new Error("");
   };
@@ -22,10 +23,8 @@ export class RelateKeywordsStrategy implements PageStrategy {
     return false;
   };
 
-  fetchChildDocs = async (
-    doc: PageDoc | BlockDoc
-  ): Promise<(BlockDoc | CommentDoc)[]> => {
-    const docs: (BlockDoc | CommentDoc)[] = [];
+  fetchChildDocs = async (doc: PageDoc | BlockDoc): Promise<ContentDoc[]> => {
+    const docs: ContentDoc[] = [];
     const ids = [...doc.metadata.blockIds, ...doc.metadata.commentIds];
 
     const results = await prisma.doc.findMany({ where: { id: { in: ids } } });
@@ -39,4 +38,10 @@ export class RelateKeywordsStrategy implements PageStrategy {
 
     return docs;
   };
+
+  createActionsDocument = () => {
+    
+  }
 }
+
+type ContentDoc = BlockDoc | CommentDoc;
