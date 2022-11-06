@@ -1,5 +1,16 @@
+import { Note } from "../../../libs/actions/types";
+import {
+  createNote,
+  createSection,
+  createSentence,
+} from "../../../libs/actions/utils";
+import { tokenizeSentences } from "../../../libs/compromise/utils";
 import { isBlockDoc, isCommentDoc } from "../../../libs/notion/narrowings";
-import { $pageStage } from "../../../libs/notion/selectors";
+import {
+  $blockText,
+  $commentText,
+  $pageStage,
+} from "../../../libs/notion/selectors";
 import { BlockDoc, CommentDoc, PageDoc } from "../../../libs/notion/types";
 import { prisma } from "../../../libs/prisma";
 import { PageStrategy } from "./Strategy";
@@ -9,6 +20,7 @@ export class RelateKeywordsStrategy implements PageStrategy {
     if (this.shouldSkipStrategy(page)) return page;
 
     const childDocs = await this.fetchChildDocs(page);
+    const note = this.createActionNote(page, childDocs);
     /**
      * Okay, so I have the updated page. What can I do with it?
      * 1. Make sure stage is not 0.
@@ -39,9 +51,26 @@ export class RelateKeywordsStrategy implements PageStrategy {
     return docs;
   };
 
-  createActionsDocument = () => {
-    
-  }
+  createActionNote = (page: PageDoc, docs: ContentDoc[]): Note => {
+    const note = createNote(
+      page.id,
+      null,
+      docs.map((block) => {
+        const text = isCommentDoc(block)
+          ? $commentText(block.data)
+          : $blockText(block.data);
+        const sentences = tokenizeSentences(text);
+
+        return createSection(
+          block.id,
+          null,
+          sentences.map((sentence) => createSentence(null, null, sentence))
+        );
+      })
+    );
+
+    return note;
+  };
 }
 
 type ContentDoc = BlockDoc | CommentDoc;

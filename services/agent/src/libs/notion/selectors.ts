@@ -72,7 +72,7 @@ export const $commentDoc = (comment: CommentObjectResponse): CommentDoc => {
     id: comment.id,
     parentId: $parentId(comment.parent),
     type: DocType.COMMENT,
-    title: truncate($commentTitle(comment), 255),
+    title: truncate($commentText(comment), 255),
     data: comment,
     metadata: {},
     createdAt: new Date(comment.created_time),
@@ -80,7 +80,7 @@ export const $commentDoc = (comment: CommentObjectResponse): CommentDoc => {
   };
 };
 
-export const $commentTitle = (comment: CommentObjectResponse) => {
+export const $commentText = (comment: CommentObjectResponse) => {
   return $richTextsPlainText(comment.rich_text);
 };
 
