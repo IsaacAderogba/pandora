@@ -35,17 +35,17 @@ export type Annotation = {
 export type Sentence<R = null> = {
   id: Nullable<Id>;
   text: string;
-  metadata: R;
+  metadata: Nullable<R>;
 };
 
 export type Section<K = null, R = null> = {
   id: Nullable<Id>;
   sentences: Sentence<R>[];
-  metadata: K;
+  metadata: Nullable<K>;
 };
 
 export type Note<T = null, K = null, R = null> = {
   id: Nullable<Id>;
   sections: Section<K, R>[];
-  metadata: T;
+  metadata: Nullable<T>;
 };

@@ -72,7 +72,7 @@ def keywords_rank(text: str):
           continue
 
         id = chunk.lemma_.lower()
-        term = chunk.text.title()
+        term = id.title()
         rank = phrase.rank
         results.append((id, term, rank))
 

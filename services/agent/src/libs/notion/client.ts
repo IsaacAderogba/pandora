@@ -23,7 +23,7 @@ import {
   CreatePageParameters,
   UpdateBlockParameters,
   AppendBlockChildrenParameters,
-  DeleteBlockParameters
+  DeleteBlockParameters,
 } from "./types";
 
 @rateLimiter({ duration: 1000, points: 1 })
@@ -74,6 +74,21 @@ class Notion {
     return this.listAll((start_cursor) =>
       this.pageList({ ...params, start_cursor })
     );
+  }
+
+  async pageFindExternal(
+    databaseId: string,
+    externalId: string
+  ): Promise<PageObjectResponse | undefined> {
+    const { results } = await notion.pageList({
+      database_id: databaseId,
+      filter: {
+        property: "External Id",
+        rich_text: { equals: externalId },
+      },
+    });
+
+    return results[0];
   }
 
   @rateLimit({ points: 1 })

@@ -50,7 +50,11 @@ const syncBook = async (book: Book) => {
     const highlightSummaries = await summarizeHighlights(filteredHighlights);
     const sortedHighlights = sortHighlights(filteredHighlights);
 
-    const page = await fetchSourcePage(book.id.toString());
+    const page = await notion.pageFindExternal(
+      process.env.SOURCES_DATABASE_ID,
+      book.id.toString()
+    );
+
     if (page) {
       await updateSourcePage(page, sortedHighlights, highlightSummaries);
     } else {
@@ -176,20 +180,6 @@ export const createHighlights = (
       },
     ];
   });
-};
-
-const fetchSourcePage = async (
-  sourceId: string
-): Promise<PageObjectResponse | undefined> => {
-  const { results } = await notion.pageList({
-    database_id: process.env.SOURCES_DATABASE_ID,
-    filter: {
-      property: "External Id",
-      rich_text: { equals: sourceId },
-    },
-  });
-
-  return results[0];
 };
 
 const summarizeHighlights = async (

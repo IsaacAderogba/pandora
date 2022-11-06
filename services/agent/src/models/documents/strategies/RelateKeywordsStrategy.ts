@@ -1,3 +1,4 @@
+import { ExtractionKeywordsResult } from "../../../libs/actions/api";
 import { actions } from "../../../libs/actions/client";
 import { Note } from "../../../libs/actions/types";
 import {
@@ -6,14 +7,16 @@ import {
   createSentence,
 } from "../../../libs/actions/utils";
 import { tokenizeSentences } from "../../../libs/compromise/utils";
+import { notion } from "../../../libs/notion/client";
 import { isBlockDoc, isCommentDoc } from "../../../libs/notion/narrowings";
 import {
   $blockText,
   $commentText,
   $pageStage,
 } from "../../../libs/notion/selectors";
-import { BlockDoc, CommentDoc, PageDoc } from "../../../libs/notion/types";
+import { BlockDoc, PageDoc } from "../../../libs/notion/types";
 import { prisma } from "../../../libs/prisma";
+import { KEYWORDS_DATABASE_ID } from "../../../utils/consts";
 import { PageStrategy } from "./Strategy";
 
 export class RelateKeywordsStrategy implements PageStrategy {
@@ -23,7 +26,7 @@ export class RelateKeywordsStrategy implements PageStrategy {
     const childDocs = await this.fetchChildDocs(page);
     const note = this.createActionNote(page, childDocs);
     const processedNote = await actions.extraction.keywords({ notes: [note] });
-    console.log(processedNote[0]);
+    const keywordIds = await this.upsertKeywordPagesRemotely(processedNote);
 
     return page;
   };
@@ -64,5 +67,41 @@ export class RelateKeywordsStrategy implements PageStrategy {
         );
       })
     );
+  };
+
+  upsertKeywordPagesRemotely = async (
+    results: ExtractionKeywordsResult
+  ): Promise<Set<string>> => {
+    const keywordIds = new Set<string>();
+
+    for (const result of results) {
+      if (!result.metadata) continue;
+
+      for (const [id, { term }] of Object.entries(result.metadata)) {
+        let page = await notion.pageFindExternal(KEYWORDS_DATABASE_ID, id);
+
+        if (!page) {
+          page = await notion.pageCreate({
+            parent: { database_id: KEYWORDS_DATABASE_ID },
+            icon: { external: { url: process.env.PANDORA_ICON_URL } },
+            properties: {
+              Name: {
+                type: "title",
+                title: [{ type: "text", text: { content: term } }],
+              },
+              "External Id": {
+                type: "rich_text",
+                rich_text: [{ type: "text", text: { content: id } }],
+              },
+              Stage: { select: { name: "0" } },
+            },
+          });
+        }
+
+        keywordIds.add(page.id);
+      }
+    }
+
+    return keywordIds;
   };
 }

@@ -35,7 +35,7 @@ const syncDatabase = async (
   for (const page of pages) {
     await withError(async () => {
       await syncDocTree(page.id, async (commentIds, blockIds) => {
-        await upsertPage(page, { commentIds, blockIds });
+        await upsertPage(page, { commentIds, blockIds }, id);
       });
     });
   }
@@ -54,14 +54,14 @@ const syncDocTree = async (
 
   for (const comment of comments) {
     await withError(async () => {
-      await upsertComment(comment);
+      await upsertComment(comment, id);
     });
   }
 
   for (const block of blocks) {
     await withError(async () => {
       await syncDocTree(block.id, async (commentIds, blockIds) => {
-        await upsertBlock(block, { commentIds, blockIds });
+        await upsertBlock(block, { commentIds, blockIds }, id);
       });
     });
   }
