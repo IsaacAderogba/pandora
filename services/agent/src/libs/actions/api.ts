@@ -1,5 +1,17 @@
 import { Document } from "./types";
 
+export type ExtractionKeywordsBody = {
+  documents: Document[];
+};
+
+type KeywordsMetadata = { [key: string]: { term: string; rank: number } };
+
+export type ExtractionKeywordsResult = Document<
+  KeywordsMetadata,
+  KeywordsMetadata,
+  KeywordsMetadata
+>[];
+
 export type RankingTextRankBody = {
   documents: Document[];
 };
