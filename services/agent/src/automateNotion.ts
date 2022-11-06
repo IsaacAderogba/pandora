@@ -1,5 +1,5 @@
 import { upsertBlock } from "./models/documents/block";
-import { upsertComment } from "./models/documents/comment";
+// import { upsertComment } from "./models/documents/comment";
 import { upsertDatabase } from "./models/documents/database";
 import { upsertPage } from "./models/documents/page";
 import { notion } from "./libs/notion/client";
@@ -7,16 +7,17 @@ import { withError } from "./libs/sentry";
 import {
   Strategy,
   BlockStrategy,
-  CommentStrategy,
+  // CommentStrategy,
   DatabaseStrategy,
   PageStrategy,
 } from "./models/documents/strategies/Strategy";
 import { RelateKeywordsStrategy } from "./models/documents/strategies/RelateKeywordsStrategy";
+import { $databaseTitle } from "./libs/notion/selectors";
 
 const databaseStrategies: DatabaseStrategy[] = [];
 const pageStrategies: PageStrategy[] = [new RelateKeywordsStrategy()];
 const blockStrategies: BlockStrategy[] = [];
-const commentStrategies: CommentStrategy[] = [];
+// const commentStrategies: CommentStrategy[] = [];
 
 export const automateNotion = async () => {
   while (true) {
@@ -29,7 +30,9 @@ export const automateNotion = async () => {
 const automateWorkspace = async () => {
   const databases = await notion.databaseListAll({});
 
-  for (const database of databases) {
+  for (const database of databases.filter(
+    (db) => $databaseTitle(db) === "Issues"
+  )) {
     await withError(async () => {
       await automateDatabase(database.id, databaseStrategies, async (pageIds) =>
         upsertDatabase(database, { pageIds })
@@ -62,7 +65,7 @@ const automateDatabase = async <T>(
         page.id,
         pageStrategies,
         async (commentIds, blockIds) =>
-          upsertPage(page, { commentIds, blockIds })
+          await upsertPage(page, { commentIds, blockIds })
       );
     });
   }
@@ -77,17 +80,18 @@ const automateDocTree = async <T>(
 ): Promise<void> => {
   const comments = await notion.commentListAll({ block_id: id });
   const blocks = await notion.blockListAll({ block_id: id });
+
   const saved = await onSave(
     comments.map((c) => c.id),
     blocks.map((b) => b.id)
   );
 
-  for (const comment of comments) {
-    await withError(async () => {
-      const saved = await upsertComment(comment);
-      await maybeRunStrategies(saved, commentStrategies);
-    });
-  }
+  // for (const comment of comments) {
+  //   await withError(async () => {
+  //     const saved = await upsertComment(comment);
+  //     await maybeRunStrategies(saved, commentStrategies);
+  //   });
+  // }
 
   for (const block of blocks) {
     await withError(async () => {
@@ -95,7 +99,7 @@ const automateDocTree = async <T>(
         block.id,
         blockStrategies,
         async (commentIds, blockIds) =>
-          upsertBlock(block, { commentIds, blockIds })
+          await upsertBlock(block, { commentIds, blockIds })
       );
     });
   }

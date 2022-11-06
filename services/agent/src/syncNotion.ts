@@ -52,11 +52,11 @@ const syncDocTree = async (
     blocks.map((b) => b.id)
   );
 
-  for (const comment of comments) {
-    await withError(async () => {
-      await upsertComment(comment);
-    });
-  }
+  // for (const comment of comments) {
+  //   await withError(async () => {
+  //     await upsertComment(comment);
+  //   });
+  // }
 
   for (const block of blocks) {
     await withError(async () => {

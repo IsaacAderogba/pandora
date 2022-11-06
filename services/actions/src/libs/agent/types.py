@@ -35,6 +35,7 @@ class Annotation(TypedDict):
 
 
 class Sentence(TypedDict):
+    id: Optional[Id]
     text: str
     metadata: Any
 
@@ -45,7 +46,7 @@ class Section(TypedDict):
     metadata: Any
 
 
-class Document(TypedDict):
+class Note(TypedDict):
     id: Optional[Id]
     sections: List[Section]
     metadata: Any

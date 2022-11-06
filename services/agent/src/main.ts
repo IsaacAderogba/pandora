@@ -27,17 +27,17 @@ if (cluster.isPrimary) {
   const worker = process.env.WORKER;
 
   switch (worker) {
-    case Worker.Server:
-      startServer();
-      break;
-    case Worker.SyncNotion:
-      syncNotion();
-      break;
+    // case Worker.Server:
+    //   startServer();
+    //   break;
+    // case Worker.SyncNotion:
+    //   syncNotion();
+    //   break;
     case Worker.AutomateNotion:
       automateNotion();
       break;
-    case Worker.SyncReadwise:
-      syncReadwise();
-      break;
+    // case Worker.SyncReadwise:
+    //   syncReadwise();
+    //   break;
   }
 }

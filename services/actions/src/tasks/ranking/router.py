@@ -2,16 +2,16 @@ from typing import List
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from src.libs.agent.types import Document
-from src.tasks.ranking.textrank import rank_documents
+from src.libs.agent.types import Note
+from src.tasks.ranking.textrank import rank_notes
 
 ranking_router = APIRouter()
 
 
 class RequestBody(BaseModel):
-    documents: List[Document]
+    notes: List[Note]
 
 
 @ranking_router.post("/textrank")
 async def textrank(body: RequestBody):
-    return rank_documents(body.documents)
+    return rank_notes(body.notes)

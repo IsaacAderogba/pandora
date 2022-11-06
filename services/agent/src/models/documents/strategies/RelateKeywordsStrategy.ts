@@ -1,3 +1,4 @@
+import { actions } from "../../../libs/actions/client";
 import { Note } from "../../../libs/actions/types";
 import {
   createNote,
@@ -21,13 +22,10 @@ export class RelateKeywordsStrategy implements PageStrategy {
 
     const childDocs = await this.fetchChildDocs(page);
     const note = this.createActionNote(page, childDocs);
-    /**
-     * Okay, so I have the updated page. What can I do with it?
-     * 1. Make sure stage is not 0.
-     * 2. Get all of its children and sub-children (don't need to be nested)
-     * 3. Create document out of child docs
-     */
-    throw new Error("");
+    const processedNote = await actions.extraction.keywords({ notes: [note] });
+    console.log(processedNote[0]);
+
+    return page;
   };
 
   shouldSkipStrategy = ({ data }: PageDoc): boolean => {
@@ -35,24 +33,22 @@ export class RelateKeywordsStrategy implements PageStrategy {
     return false;
   };
 
-  fetchChildDocs = async (doc: PageDoc | BlockDoc): Promise<ContentDoc[]> => {
-    const docs: ContentDoc[] = [];
-    const ids = [...doc.metadata.blockIds, ...doc.metadata.commentIds];
+  fetchChildDocs = async (doc: PageDoc | BlockDoc): Promise<BlockDoc[]> => {
+    const docs: BlockDoc[] = [];
+    const ids = doc.metadata.blockIds;
 
     const results = await prisma.doc.findMany({ where: { id: { in: ids } } });
     for (const result of results) {
       if (isBlockDoc(result)) {
         docs.push(result, ...(await this.fetchChildDocs(result)));
-      } else if (isBlockDoc(result) || isCommentDoc(result)) {
-        docs.push(result);
       }
     }
 
     return docs;
   };
 
-  createActionNote = (page: PageDoc, docs: ContentDoc[]): Note => {
-    const note = createNote(
+  createActionNote = (page: PageDoc, docs: BlockDoc[]): Note => {
+    return createNote(
       page.id,
       null,
       docs.map((block) => {
@@ -68,9 +64,5 @@ export class RelateKeywordsStrategy implements PageStrategy {
         );
       })
     );
-
-    return note;
   };
 }
-
-type ContentDoc = BlockDoc | CommentDoc;
