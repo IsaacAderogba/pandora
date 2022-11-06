@@ -1,6 +1,7 @@
 import { DocType } from "@prisma/client";
 import { truncate } from "../../utils/text";
-import { isPageTitleProperty } from "./narrowings";
+import { isPageSelectProperty, isPageTitleProperty } from "./narrowings";
+import { SelectProperty } from "./properties";
 import {
   CommentDoc,
   DatabaseDoc,
@@ -56,6 +57,13 @@ export const $pageTitle = (page: PageObjectResponse) => {
     .filter(isPageTitleProperty)
     .map(({ title }) => title.map(({ plain_text }) => plain_text).join(""))
     .join("");
+};
+
+export const $pageStage = (
+  page: PageObjectResponse
+): SelectProperty | undefined => {
+  const select = Object.values(page.properties).find(isPageSelectProperty);
+  if (select?.select?.name === "Stage") return select;
 };
 
 // comment selectors

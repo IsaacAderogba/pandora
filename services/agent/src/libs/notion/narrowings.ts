@@ -1,4 +1,4 @@
-import { TitleProperty } from "./properties";
+import { SelectProperty, TitleProperty } from "./properties";
 import {
   DatabaseObjectResponse,
   PageObjectResponse,
@@ -50,3 +50,7 @@ export const isCommentObjectResponse = (
 export const isPageTitleProperty = (
   prop: PageObjectResponse["properties"][""]
 ): prop is TitleProperty => prop.type === "title";
+
+export const isPageSelectProperty = (
+  prop: PageObjectResponse["properties"][""]
+): prop is SelectProperty => prop.type === "select";
