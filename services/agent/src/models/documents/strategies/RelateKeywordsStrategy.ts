@@ -44,8 +44,8 @@ export class RelateKeywordsStrategy implements PageStrategy {
   shouldSkipStrategy = ({ data }: PageDoc): boolean => {
     if ($pageStage(data)?.select?.name === "0") return true;
     if ($parentId(data.parent) === KEYWORDS_DATABASE_ID) return true;
-    if ($parentId(data.parent) === KEYWORDS_DATABASE_ID) return true;
-    if ($parentId(data.parent) === KEYWORDS_DATABASE_ID) return true;
+    if ($parentId(data.parent) === NOTES_DATABASE_ID) return true;
+    if ($parentId(data.parent) === TASKS_DATABASE_ID) return true;
     return false;
   };
 

@@ -65,6 +65,7 @@ def keywords_rank(text: str):
             continue
 
         doc_chunk = nlp(chunk.text)
+        lemmas: list[str] = []
 
         has_stopword = False
         has_adjective = False
@@ -75,10 +76,12 @@ def keywords_rank(text: str):
             if token.text.lower() in stopwords:
                 has_stopword = True
 
+            lemmas.append(token.lemma_.lower())
+
         if has_stopword == True or has_adjective == True:
             continue
 
-        id: str = chunk.lemma_.lower()
+        id: str = " ".join(lemmas)
         term = id.title()
         rank = phrase.rank
         results.append((id, term, rank))
