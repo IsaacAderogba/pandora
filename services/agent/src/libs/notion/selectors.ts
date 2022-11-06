@@ -38,11 +38,12 @@ export const $databaseTitle = (database: DatabaseObjectResponse) => {
 // page selectors
 export const $pageDoc = (
   page: PageObjectResponse,
-  metadata: PageDoc["metadata"]
+  metadata: PageDoc["metadata"],
+  parentId = $parentId(page.parent)
 ): PageDoc => {
   return {
     id: page.id,
-    parentId: $parentId(page.parent),
+    parentId,
     type: DocType.PAGE,
     title: truncate($pageTitle(page), 255),
     data: page,
@@ -67,10 +68,13 @@ export const $pageStage = (
 };
 
 // comment selectors
-export const $commentDoc = (comment: CommentObjectResponse): CommentDoc => {
+export const $commentDoc = (
+  comment: CommentObjectResponse,
+  parentId = $parentId(comment.parent)
+): CommentDoc => {
   return {
     id: comment.id,
-    parentId: $parentId(comment.parent),
+    parentId,
     type: DocType.COMMENT,
     title: truncate($commentText(comment), 255),
     data: comment,
@@ -87,11 +91,12 @@ export const $commentText = (comment: CommentObjectResponse) => {
 // block selectors
 export const $blockDoc = (
   block: BlockObjectResponse,
-  metadata: BlockDoc["metadata"]
+  metadata: BlockDoc["metadata"],
+  parentId = $parentId(block.parent)
 ): BlockDoc => {
   return {
     id: block.id,
-    parentId: $parentId(block.parent),
+    parentId,
     type: DocType.BLOCK,
     title: truncate($blockText(block), 255).split("\n")[0],
     data: block,

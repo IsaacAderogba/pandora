@@ -1,5 +1,5 @@
 import { upsertBlock } from "./models/documents/block";
-// import { upsertComment } from "./models/documents/comment";
+import { upsertComment } from "./models/documents/comment";
 import { upsertDatabase } from "./models/documents/database";
 import { upsertPage } from "./models/documents/page";
 import { notion } from "./libs/notion/client";
@@ -7,7 +7,7 @@ import { withError } from "./libs/sentry";
 import {
   Strategy,
   BlockStrategy,
-  // CommentStrategy,
+  CommentStrategy,
   DatabaseStrategy,
   PageStrategy,
 } from "./models/documents/strategies/Strategy";
@@ -17,7 +17,7 @@ import { $databaseTitle } from "./libs/notion/selectors";
 const databaseStrategies: DatabaseStrategy[] = [];
 const pageStrategies: PageStrategy[] = [new RelateKeywordsStrategy()];
 const blockStrategies: BlockStrategy[] = [];
-// const commentStrategies: CommentStrategy[] = [];
+const commentStrategies: CommentStrategy[] = [];
 
 export const automateNotion = async () => {
   while (true) {
@@ -65,7 +65,7 @@ const automateDatabase = async <T>(
         page.id,
         pageStrategies,
         async (commentIds, blockIds) =>
-          await upsertPage(page, { commentIds, blockIds })
+          await upsertPage(page, { commentIds, blockIds }, id)
       );
     });
   }
@@ -86,12 +86,12 @@ const automateDocTree = async <T>(
     blocks.map((b) => b.id)
   );
 
-  // for (const comment of comments) {
-  //   await withError(async () => {
-  //     const saved = await upsertComment(comment);
-  //     await maybeRunStrategies(saved, commentStrategies);
-  //   });
-  // }
+  for (const comment of comments) {
+    await withError(async () => {
+      const saved = await upsertComment(comment, id);
+      await maybeRunStrategies(saved, commentStrategies);
+    });
+  }
 
   for (const block of blocks) {
     await withError(async () => {
@@ -99,7 +99,7 @@ const automateDocTree = async <T>(
         block.id,
         blockStrategies,
         async (commentIds, blockIds) =>
-          await upsertBlock(block, { commentIds, blockIds })
+          await upsertBlock(block, { commentIds, blockIds }, id)
       );
     });
   }
