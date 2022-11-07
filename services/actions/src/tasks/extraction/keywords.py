@@ -58,6 +58,7 @@ def keywords_rank(text: str):
     doc = nlp(text)
 
     tags = {"NOUN", "PROPN"}
+    blacklist = {"summary"}
     for phrase in doc._.phrases[:15]:
         chunk = phrase.chunks[0]
 
@@ -69,6 +70,7 @@ def keywords_rank(text: str):
 
         has_stopword = False
         has_adjective = False
+        has_blacklist = False
         for token in doc_chunk:
             if token.pos_ not in tags:
                 has_adjective = True
@@ -76,9 +78,12 @@ def keywords_rank(text: str):
             if token.text.lower() in stopwords:
                 has_stopword = True
 
+            if token.text.lower() in blacklist:
+                has_blacklist = True
+
             lemmas.append(token.lemma_.lower())
 
-        if has_stopword == True or has_adjective == True:
+        if has_stopword == True or has_adjective == True or has_blacklist == True:
             continue
 
         id: str = " ".join(lemmas)
