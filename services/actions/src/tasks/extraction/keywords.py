@@ -76,13 +76,14 @@ def keywords_rank(text: str):
         has_adjective = False
         has_blacklist = False
         for token in doc_chunk:
+            text = token.text.lower()
             if token.pos_ not in tags:
                 has_adjective = True
 
-            if token.text.lower() in stopwords:
+            if text in stopwords or len(text) <= 2:
                 has_stopword = True
 
-            if token.text.lower() in blacklist:
+            if text in blacklist:
                 has_blacklist = True
 
             lemmas.append(token.lemma_.lower())
