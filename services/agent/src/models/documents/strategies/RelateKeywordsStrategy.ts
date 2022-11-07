@@ -17,6 +17,7 @@ import {
   $blockText,
   $commentText,
   $pageStage,
+  $pageTitle,
   $parentId,
 } from "../../../libs/notion/selectors";
 import { BlockDoc, PageDoc } from "../../../libs/notion/types";
@@ -71,7 +72,7 @@ export class RelateKeywordsStrategy implements PageStrategy {
         const text = isCommentDoc(block)
           ? $commentText(block.data)
           : $blockText(block.data);
-        const sentences = tokenizeSentences(text);
+        const sentences = [$pageTitle(page.data), ...tokenizeSentences(text)];
 
         return createSection(
           block.id,
