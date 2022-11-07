@@ -62,6 +62,10 @@ def keywords_rank(text: str):
     for phrase in doc._.phrases[:15]:
         chunk = phrase.chunks[0]
 
+        # define regex instead
+        if "\\" in chunk.text:
+            continue
+
         if len(chunk) < 2 or len(chunk) > 3:
             continue
 
