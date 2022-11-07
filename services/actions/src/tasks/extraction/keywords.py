@@ -1,3 +1,5 @@
+import re
+import string
 from typing import List, Union
 from fastapi import APIRouter
 
@@ -54,7 +56,6 @@ def set_keywords(
 
 def keywords_rank(text: str):
     results: list[tuple[str, str, float]] = []
-
     doc = nlp(text)
 
     tags = {"NOUN", "PROPN"}
@@ -62,14 +63,15 @@ def keywords_rank(text: str):
     for phrase in doc._.phrases[:15]:
         chunk = phrase.chunks[0]
 
-        # define regex instead
-        if "\\" in chunk.text:
+        if any(p in chunk.text for p in string.punctuation):
             continue
-
         if len(chunk) < 2 or len(chunk) > 3:
             continue
 
         doc_chunk = nlp(chunk.text)
+        if len(doc.ents) > 0:
+            continue
+
         lemmas: list[str] = []
 
         has_stopword = False
