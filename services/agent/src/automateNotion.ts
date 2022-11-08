@@ -11,9 +11,10 @@ import {
   DatabaseStrategy,
   PageStrategy,
 } from "./models/documents/strategies/Strategy";
+import { RelateKeywordsStrategy } from "./models/documents/strategies/RelateKeywordsStrategy";
 
 const databaseStrategies: DatabaseStrategy[] = [];
-const pageStrategies: PageStrategy[] = [];
+const pageStrategies: PageStrategy[] = [new RelateKeywordsStrategy()];
 const blockStrategies: BlockStrategy[] = [];
 const commentStrategies: CommentStrategy[] = [];
 

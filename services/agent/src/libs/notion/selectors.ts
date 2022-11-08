@@ -68,6 +68,14 @@ export const $pageStage = (
   }
 };
 
+export const $pageStatus = (
+  page: PageObjectResponse
+): SelectProperty | undefined => {
+  if (page.properties["Status"]?.type === "select") {
+    return page.properties["Status"];
+  }
+};
+
 // comment selectors
 export const $commentDoc = (
   comment: CommentObjectResponse,
