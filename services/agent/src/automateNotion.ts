@@ -84,8 +84,8 @@ const automateDocTree = async <T>(
   );
 
   for (const comment of comments) {
+    const saved = await upsertComment(comment, id);
     await withError(async () => {
-      const saved = await upsertComment(comment, id);
       await maybeRunStrategies(saved, commentStrategies);
     });
   }

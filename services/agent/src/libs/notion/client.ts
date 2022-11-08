@@ -25,6 +25,7 @@ import {
   AppendBlockChildrenParameters,
   DeleteBlockParameters,
   UpdatePageParameters,
+  CreateCommentParameters
 } from "./types";
 
 @rateLimiter({ duration: 1000, points: 1 })
@@ -215,6 +216,15 @@ class Notion {
       results: results.filter(isCommentObjectResponse),
       next: next_cursor,
     };
+  }
+
+  @rateLimit({ points: 1 })
+  async commentCreate(params: CreateCommentParameters): Promise<CommentObjectResponse> {
+    const result = await this.client.comments.create(params);
+    if (!isCommentObjectResponse(result)) {
+      throw this.error("Expected comment response object");
+    }
+    return result;
   }
 
   private async listAll<T>(

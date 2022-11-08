@@ -16,6 +16,7 @@ import {
 import {
   $blockText,
   $commentText,
+  $pageDoc,
   $pageStatus,
   $pageTitle,
   $parentId,
@@ -27,22 +28,29 @@ import { PageStrategy } from "./Strategy";
 
 export class RelateKeywordsStrategy implements PageStrategy {
   run: PageStrategy["run"] = async (_, page) => {
-    if (this.shouldSkipStrategy(page)) return page;
+    if (await this.shouldSkipStrategy(page)) return page;
 
     const childDocs = await this.fetchChildDocs(page);
     const note = this.createActionNote(page, childDocs);
     const processedNote = await actions.extraction.keywords({ notes: [note] });
-    const keywordIds = await this.upsertKeywordPagesRemotely(processedNote);
-    if (this.pageHasKeywords(page, keywordIds)) return page;
+    const commentId = await this.createKeywordsComment(page, processedNote);
+    if (!commentId) return page;
 
-    return this.updatePageRelations(page, keywordIds);
+    return this.updatePageMetadata(page, commentId);
   };
 
-  shouldSkipStrategy = ({ data }: PageDoc): boolean => {
+  shouldSkipStrategy = async ({
+    data,
+    metadata,
+  }: PageDoc): Promise<boolean> => {
     if ($pageStatus(data)?.select?.name === "Done") return true;
     if ($parentId(data.parent) === KEYWORDS_DATABASE_ID) return true;
-    
-    return false;
+
+    const ids = metadata.commentIds;
+    const children = await prisma.doc.findMany({ where: { id: { in: ids } } });
+    return children.filter(isCommentDoc).some((comment) => {
+      return $commentText(comment.data).includes("candidate keyword");
+    });
   };
 
   fetchChildDocs = async (doc: PageDoc | BlockDoc): Promise<BlockDoc[]> => {
@@ -78,69 +86,51 @@ export class RelateKeywordsStrategy implements PageStrategy {
     );
   };
 
-  upsertKeywordPagesRemotely = async (
-    results: ExtractionKeywordsResult
-  ): Promise<string[]> => {
-    const keywordIds: string[] = [];
-
-    for (const result of results) {
-      if (!result.metadata) continue;
-
-      for (const [id, { term }] of Object.entries(result.metadata.keywords)) {
-        let page = await notion.pageFindExternal(KEYWORDS_DATABASE_ID, id);
-
-        if (!page) {
-          page = await notion.pageCreate({
-            parent: { database_id: KEYWORDS_DATABASE_ID },
-            icon: { external: { url: process.env.PANDORA_ICON_URL } },
-            properties: {
-              Name: {
-                type: "title",
-                title: [{ type: "text", text: { content: term } }],
-              },
-              "External Id": {
-                type: "rich_text",
-                rich_text: [{ type: "text", text: { content: id } }],
-              },
-              Stage: { select: { name: "0" } },
-            },
-          });
-        }
-
-        keywordIds.push(page.id);
-      }
-    }
-
-    return keywordIds;
-  };
-
-  pageHasKeywords = (page: PageDoc, keywordIds: string[]): boolean => {
-    const relationIds = new Set<string>();
-
-    for (const prop of Object.values(page.data.properties)) {
-      if (prop.type !== "relation") continue;
-      prop.relation.forEach((relation) => relationIds.add(relation.id));
-    }
-
-    return keywordIds.every((keywordId) => relationIds.has(keywordId));
-  };
-
-  updatePageRelations = async (
+  createKeywordsComment = async (
     page: PageDoc,
-    keywordIds: string[]
+    results: ExtractionKeywordsResult
+  ): Promise<string | undefined> => {
+    const keywords: string[] = [];
+
+    for (const { metadata } of results) {
+      if (!metadata) continue;
+      keywords.push(...Object.values(metadata.keywords).map((k) => k.term));
+    }
+
+    if (!keywords.length) return;
+    const createComment = async (content: string) => {
+      const { id } = await notion.commentCreate({
+        parent: { page_id: page.id },
+        rich_text: [{ text: { content } }],
+      });
+      return id;
+    };
+
+    if (keywords.length === 1) {
+      const message = `${keywords[0]} is a candidate keyword for this page.`;
+      return await createComment(message);
+    } else if (keywords.length === 2) {
+      const message = `${keywords[0]} and ${keywords[1]} are candidate keywords for this page.`;
+      return await createComment(message);
+    } else {
+      const [first, second, third] = keywords.slice(0, 3);
+      const message = `${first}, ${second}, and ${third} are candidate keywords for this page.`;
+      return await createComment(message);
+    }
+  };
+
+  updatePageMetadata = async (
+    page: PageDoc,
+    commentId: string
   ): Promise<PageDoc> => {
-    const updatedPage = await notion.pageUpdate({
-      page_id: page.id,
-      properties: {
-        Keywords: {
-          relation: keywordIds.map((id) => ({ id })),
-        },
-      },
+    const { metadata } = $pageDoc(page.data, {
+      blockIds: page.metadata.blockIds,
+      commentIds: [...page.metadata.commentIds, commentId],
     });
 
     const doc = await prisma.doc.update({
       where: { id: page.id },
-      data: { data: updatedPage },
+      data: { metadata },
     });
 
     if (!isPageDoc(doc)) throw new Error("Expected page doc");

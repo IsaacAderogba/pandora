@@ -70,4 +70,5 @@ export type {
   UpdateBlockParameters,
   AppendBlockChildrenParameters,
   DeleteBlockParameters,
+  CreateCommentParameters,
 } from "@notionhq/client/build/src/api-endpoints";
