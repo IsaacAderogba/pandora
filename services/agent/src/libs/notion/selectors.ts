@@ -1,6 +1,6 @@
 import { DocType } from "@prisma/client";
 import { truncate } from "../../utils/text";
-import { isPageSelectProperty, isPageTitleProperty } from "./narrowings";
+import { isPageTitleProperty } from "./narrowings";
 import { SelectProperty, StatusProperty } from "./properties";
 import {
   CommentDoc,
@@ -128,6 +128,10 @@ export const $blockText = (block: BlockObjectResponse) => {
     case "to_do":
     case "toggle":
       return $richTextsPlainText((block as any)[block.type].rich_text);
+    case "child_page":
+      return block.child_page.title;
+    case "child_database":
+      return block.child_database.title;
     default:
       return "";
   }
