@@ -1,7 +1,7 @@
 import { DocType } from "@prisma/client";
 import { truncate } from "../../utils/text";
 import { isPageSelectProperty, isPageTitleProperty } from "./narrowings";
-import { SelectProperty } from "./properties";
+import { SelectProperty, StatusProperty } from "./properties";
 import {
   CommentDoc,
   DatabaseDoc,
@@ -70,8 +70,8 @@ export const $pageStage = (
 
 export const $pageStatus = (
   page: PageObjectResponse
-): SelectProperty | undefined => {
-  if (page.properties["Status"]?.type === "select") {
+): StatusProperty | undefined => {
+  if (page.properties["Status"]?.type === "status") {
     return page.properties["Status"];
   }
 };

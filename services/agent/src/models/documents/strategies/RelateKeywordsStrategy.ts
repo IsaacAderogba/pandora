@@ -23,7 +23,8 @@ import {
 } from "../../../libs/notion/selectors";
 import { BlockDoc, PageDoc } from "../../../libs/notion/types";
 import { prisma } from "../../../libs/prisma";
-import { KEYWORDS_DATABASE_ID } from "../../../utils/consts";
+import { KEYWORDS_DATABASE_ID, PANDORA_ID } from "../../../utils/consts";
+import { upsertComment } from "../comment";
 import { PageStrategy } from "./Strategy";
 
 export class RelateKeywordsStrategy implements PageStrategy {
@@ -43,13 +44,16 @@ export class RelateKeywordsStrategy implements PageStrategy {
     data,
     metadata,
   }: PageDoc): Promise<boolean> => {
-    if ($pageStatus(data)?.select?.name === "Done") return true;
+    if ($pageStatus(data)?.status?.name !== "Done") return true;
     if ($parentId(data.parent) === KEYWORDS_DATABASE_ID) return true;
 
     const ids = metadata.commentIds;
     const children = await prisma.doc.findMany({ where: { id: { in: ids } } });
     return children.filter(isCommentDoc).some((comment) => {
-      return $commentText(comment.data).includes("candidate keyword");
+      return (
+        comment.data.created_by.id === PANDORA_ID &&
+        $commentText(comment.data).includes("candidate keyword")
+      );
     });
   };
 
@@ -99,11 +103,11 @@ export class RelateKeywordsStrategy implements PageStrategy {
 
     if (!keywords.length) return;
     const createComment = async (content: string) => {
-      const { id } = await notion.commentCreate({
+      const comment = await notion.commentCreate({
         parent: { page_id: page.id },
         rich_text: [{ text: { content } }],
       });
-      return id;
+      return (await upsertComment(comment, page.id)).id;
     };
 
     if (keywords.length === 1) {
