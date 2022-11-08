@@ -59,7 +59,7 @@ def keywords_rank(text: str):
     doc = nlp(text)
 
     blacklist = {"summary"}
-    for phrase in doc._.phrases[:25]:
+    for phrase in doc._.phrases[:10]:
         chunk = phrase.chunks[0]
 
         if any(p in chunk.text for p in string.punctuation):
