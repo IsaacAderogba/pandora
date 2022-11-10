@@ -24,10 +24,11 @@ import {
   $pageDoc,
   $pageStatus,
   $pageTitle,
+  $parentId,
 } from "../../../libs/notion/selectors";
 import { BlockDoc, PageDoc } from "../../../libs/notion/types";
 import { prisma } from "../../../libs/prisma";
-import { PANDORA_ID } from "../../../utils/consts";
+import { KEYWORDS_DATABASE_ID, PANDORA_ID } from "../../../utils/consts";
 import { searchDocs } from "../base";
 import { upsertComment } from "../comment";
 import { PageStrategy } from "./Strategy";
@@ -57,6 +58,7 @@ export class SuggestPagesStrategy implements PageStrategy {
     metadata,
   }: PageDoc): Promise<boolean> => {
     if ($pageStatus(data)?.status?.name !== "Done") return true;
+    if ($parentId(data.parent) === KEYWORDS_DATABASE_ID) return true;
 
     const ids = metadata.commentIds;
     const children = await prisma.doc.findMany({ where: { id: { in: ids } } });
