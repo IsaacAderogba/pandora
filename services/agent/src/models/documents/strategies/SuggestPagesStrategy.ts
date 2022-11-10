@@ -7,6 +7,7 @@ import {
   createSentence,
 } from "../../../libs/actions/utils";
 import { tokenizeSentences } from "../../../libs/compromise/utils";
+import { RichTextRequest } from "../../../libs/notion/blocks";
 import { notion } from "../../../libs/notion/client";
 import {
   isBlockDoc,
@@ -34,10 +35,16 @@ export class SuggestPagesStrategy implements PageStrategy {
     const childDocs = await this.fetchChildDocs(page);
     const note = this.createActionNote(page, childDocs);
     const processedNote = await actions.extraction.keywords({ notes: [note] });
-    const commentId = await this.createKeywordsComment(page, processedNote);
-    if (!commentId) return page;
+    const { text, keywords } = this.getKeywordsText(page, processedNote);
+    if (!keywords.length) return page;
 
-    return this.updatePageMetadata(page, commentId);
+    const comment = await notion.commentCreate({
+      parent: { page_id: page.id },
+      rich_text: [...text],
+    });
+    await upsertComment(comment, page.id);
+
+    return this.updatePageMetadata(page, comment.id);
   };
 
   shouldSkipStrategy = async ({
@@ -90,37 +97,33 @@ export class SuggestPagesStrategy implements PageStrategy {
     );
   };
 
-  createKeywordsComment = async (
+  getKeywordsText = (
     page: PageDoc,
     results: ExtractionKeywordsResult
-  ): Promise<string | undefined> => {
-    const keywords: string[] = [];
+  ): { text: RichTextRequest[]; keywords: string[] } => {
+    let keywords: string[] = [];
 
     for (const { metadata } of results) {
       if (!metadata) continue;
       keywords.push(...Object.values(metadata.keywords).map((k) => k.term));
     }
 
-    if (!keywords.length) return;
-    const createComment = async (content: string) => {
-      const comment = await notion.commentCreate({
-        parent: { page_id: page.id },
-        rich_text: [{ text: { content } }],
-      });
-      return (await upsertComment(comment, page.id)).id;
-    };
+    if (!keywords.length) return { text: [], keywords: [] };
 
+    let content: string;
     if (keywords.length === 1) {
-      const message = `${keywords[0]} is a candidate keyword for this page.`;
-      return await createComment(message);
+      content = `${keywords[0]} is a candidate keyword for this page.`;
+      keywords = [keywords[0]];
     } else if (keywords.length === 2) {
-      const message = `${keywords[0]} and ${keywords[1]} are candidate keywords for this page.`;
-      return await createComment(message);
+      content = `${keywords[0]} and ${keywords[1]} are candidate keywords for this page.`;
+      keywords = [keywords[0], keywords[1]];
     } else {
       const [first, second, third] = keywords.slice(0, 3);
-      const message = `${first}, ${second}, and ${third} are candidate keywords for this page.`;
-      return await createComment(message);
+      content = `${first}, ${second}, and ${third} are candidate keywords for this page.`;
+      keywords = [first, second, third];
     }
+
+    return { text: [{ text: { content } }], keywords: [] };
   };
 
   updatePageMetadata = async (

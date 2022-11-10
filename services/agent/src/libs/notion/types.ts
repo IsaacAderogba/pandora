@@ -7,6 +7,7 @@ import {
   PartialCommentObjectResponse,
   BlockObjectResponse,
   PartialBlockObjectResponse,
+  CreatePageParameters,
 } from "@notionhq/client/build/src/api-endpoints";
 import { Doc } from "@prisma/client";
 
@@ -54,6 +55,11 @@ export type PaginationResult<T> = {
   results: T[];
   next: string | null;
 };
+
+export type BlockObjectRequest = Exclude<
+  CreatePageParameters["children"],
+  undefined
+>[0];
 
 export type {
   SearchParameters,
