@@ -109,7 +109,7 @@ export class SuggestPagesStrategy implements PageStrategy {
       if (!metadata) continue;
       keywords.push(...Object.values(metadata.keywords).map((k) => k.term));
     }
-    return keywords.slice(0, 3);
+    return keywords.slice(0, 5);
   };
 
   preparePagesComment = async (
