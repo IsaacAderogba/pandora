@@ -179,7 +179,7 @@ export class SuggestPagesStrategy implements PageStrategy {
             { mention: { page: { id: first } } },
             { text: { content: ", " } },
             { mention: { page: { id: second } } },
-            { text: { content: ", and" } },
+            { text: { content: ", and " } },
             { mention: { page: { id: third } } },
             { text: { content: "." } },
           ];
