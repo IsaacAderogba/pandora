@@ -27,7 +27,7 @@ import { KEYWORDS_DATABASE_ID, PANDORA_ID } from "../../../utils/consts";
 import { upsertComment } from "../comment";
 import { PageStrategy } from "./Strategy";
 
-export class RelateKeywordsStrategy implements PageStrategy {
+export class SuggestPagesStrategy implements PageStrategy {
   run: PageStrategy["run"] = async (_, page) => {
     if (await this.shouldSkipStrategy(page)) return page;
 
