@@ -43,10 +43,6 @@ export class SuggestPagesStrategy implements PageStrategy {
     const rich_text = await this.preparePagesComment(page, childDocs, keywords);
     if (!rich_text.length) return page;
 
-    console.log("rich_text", rich_text);
-
-    return page;
-
     const comment = await notion.commentCreate({
       parent: { page_id: page.id },
       rich_text,
@@ -67,7 +63,7 @@ export class SuggestPagesStrategy implements PageStrategy {
     return children.filter(isCommentDoc).some((comment) => {
       return (
         comment.data.created_by.id === PANDORA_ID &&
-        $commentText(comment.data).includes("related pages")
+        $commentText(comment.data).includes("Unlinked relations")
       );
     });
   };
@@ -119,12 +115,11 @@ export class SuggestPagesStrategy implements PageStrategy {
     docs: BlockDoc[],
     keywords: string[]
   ): Promise<RichTextRequest[]> => {
-    const blacklist = new Set<string>([id]);
-
     const comments = await prisma.doc.findMany({
       where: { id: { in: metadata.commentIds } },
     });
 
+    const blacklist = new Set<string>([id]);
     [...docs, ...comments].forEach((doc) => {
       blacklist.add(id);
       if (doc.parentId) blacklist.add(doc.parentId);
@@ -172,7 +167,6 @@ export class SuggestPagesStrategy implements PageStrategy {
       return false;
     });
 
-    console.log("page docs", dedupedDocs);
     if (dedupedDocs.length <= 3) return [];
 
     const remoteIds: string[] = [];

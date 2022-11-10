@@ -16,7 +16,7 @@ import { SuggestPagesStrategy } from "./models/documents/strategies/SuggestPages
 
 const databaseStrategies: DatabaseStrategy[] = [];
 const pageStrategies: PageStrategy[] = [
-  // new SuggestKeywordsStrategy(),
+  new SuggestKeywordsStrategy(),
   new SuggestPagesStrategy(),
 ];
 const blockStrategies: BlockStrategy[] = [];
