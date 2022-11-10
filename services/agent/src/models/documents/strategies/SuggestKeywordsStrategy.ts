@@ -1,4 +1,3 @@
-import { Doc } from "@prisma/client";
 import { ExtractionKeywordsResult } from "../../../libs/actions/api";
 import { actions } from "../../../libs/actions/client";
 import { Note } from "../../../libs/actions/types";
@@ -13,45 +12,37 @@ import { notion } from "../../../libs/notion/client";
 import {
   isBlockDoc,
   isCommentDoc,
-  isDatabaseDoc,
   isPageDoc,
 } from "../../../libs/notion/narrowings";
 import {
-  $blockPageMentions,
   $blockText,
   $commentText,
   $pageDoc,
   $pageStatus,
   $pageTitle,
+  $parentId,
 } from "../../../libs/notion/selectors";
 import { BlockDoc, PageDoc } from "../../../libs/notion/types";
 import { prisma } from "../../../libs/prisma";
-import { PANDORA_ID } from "../../../utils/consts";
-import { searchDocs } from "../base";
+import { KEYWORDS_DATABASE_ID, PANDORA_ID } from "../../../utils/consts";
 import { upsertComment } from "../comment";
 import { PageStrategy } from "./Strategy";
 
-export class SuggestPagesStrategy implements PageStrategy {
+export class SuggestKeywordsStrategy implements PageStrategy {
   run: PageStrategy["run"] = async (_, page) => {
     if (await this.shouldSkipStrategy(page)) return page;
 
     const childDocs = await this.fetchChildDocs(page);
-    const note = this.prepareNote(page, childDocs);
+    const note = this.createActionNote(page, childDocs);
     const processedNote = await actions.extraction.keywords({ notes: [note] });
-    const keywords = this.prepareKeywords(processedNote);
-    const rich_text = await this.preparePagesComment(page, childDocs, keywords);
+    const rich_text = this.prepareKeywordsComment(processedNote);
     if (!rich_text.length) return page;
-
-    console.log("rich_text", rich_text);
-
-    return page;
 
     const comment = await notion.commentCreate({
       parent: { page_id: page.id },
       rich_text,
     });
     await upsertComment(comment, page.id);
-
     return this.updatePageMetadata(page, comment.id);
   };
 
@@ -60,13 +51,14 @@ export class SuggestPagesStrategy implements PageStrategy {
     metadata,
   }: PageDoc): Promise<boolean> => {
     if ($pageStatus(data)?.status?.name !== "Done") return true;
+    if ($parentId(data.parent) === KEYWORDS_DATABASE_ID) return true;
 
     const ids = metadata.commentIds;
     const children = await prisma.doc.findMany({ where: { id: { in: ids } } });
     return children.filter(isCommentDoc).some((comment) => {
       return (
         comment.data.created_by.id === PANDORA_ID &&
-        $commentText(comment.data).includes("related pages")
+        $commentText(comment.data).includes("candidate keyword")
       );
     });
   };
@@ -85,7 +77,7 @@ export class SuggestPagesStrategy implements PageStrategy {
     return docs;
   };
 
-  prepareNote = (page: PageDoc, docs: BlockDoc[]): Note => {
+  createActionNote = (page: PageDoc, docs: BlockDoc[]): Note => {
     return createNote(
       page.id,
       null,
@@ -104,90 +96,32 @@ export class SuggestPagesStrategy implements PageStrategy {
     );
   };
 
-  prepareKeywords = (results: ExtractionKeywordsResult): string[] => {
-    const keywords: string[] = [];
+  prepareKeywordsComment = (
+    results: ExtractionKeywordsResult
+  ): RichTextRequest[] => {
+    let keywords: string[] = [];
+
     for (const { metadata } of results) {
       if (!metadata) continue;
       keywords.push(...Object.values(metadata.keywords).map((k) => k.term));
     }
-    return keywords.slice(0, 3);
-  };
 
-  preparePagesComment = async (
-    page: PageDoc,
-    docs: BlockDoc[],
-    keywords: string[]
-  ): Promise<RichTextRequest[]> => {
-    const blacklist = new Set<string>([page.id]);
-    docs.forEach(({ id, data, parentId }) => {
-      blacklist.add(id);
-      if (parentId) blacklist.add(parentId);
-      $blockPageMentions(data).forEach((id) => blacklist.add(id));
-    });
+    if (!keywords.length) return [];
 
-    const pageDocs: PageDoc[] = [];
-    async function buildPageDocs(doc: Doc | null): Promise<void> {
-      if (!doc || !doc.parentId || blacklist.has(doc.id)) return;
-
-      if (isPageDoc(doc)) {
-        const parent = await prisma.doc.findUnique({
-          where: { id: doc.parentId },
-        });
-
-        const pageIsNotArchived =
-          parent &&
-          isDatabaseDoc(parent) &&
-          parent.metadata.pageIds.includes(doc.id);
-
-        if (pageIsNotArchived) pageDocs.push(doc);
-      } else if (isBlockDoc(doc)) {
-        return await buildPageDocs(
-          await prisma.doc.findUnique({
-            where: { id: doc.parentId },
-          })
-        );
-      }
+    let content: string;
+    if (keywords.length === 1) {
+      content = `${keywords[0]} is a candidate keyword for this page.`;
+      keywords = [keywords[0]];
+    } else if (keywords.length === 2) {
+      content = `${keywords[0]} and ${keywords[1]} are candidate keywords for this page.`;
+      keywords = [keywords[0], keywords[1]];
+    } else {
+      const [first, second, third] = keywords.slice(0, 3);
+      content = `${first}, ${second}, and ${third} are candidate keywords for this page.`;
+      keywords = [first, second, third];
     }
 
-    const results = await Promise.all(keywords.map((k) => searchDocs(k)));
-    const flattened = results.flatMap((result) => result);
-    await Promise.all(flattened.map((doc) => buildPageDocs(doc)));
-
-    const dedupedDocs = pageDocs.filter((doc) => {
-      if (blacklist.has(doc.id) === false) {
-        blacklist.add(doc.id);
-        return true;
-      }
-      return false;
-    });
-
-    console.log("page docs", dedupedDocs);
-    if (dedupedDocs.length <= 3) return [];
-
-    const remoteIds: string[] = [];
-    for (const doc of dedupedDocs) {
-      try {
-        if (remoteIds.length === 3) {
-          const [first, second, third] = remoteIds;
-          return [
-            { text: { content: "Unlinked relations are " } },
-            { mention: { page: { id: first } } },
-            { text: { content: ", " } },
-            { mention: { page: { id: second } } },
-            { text: { content: ", and" } },
-            { mention: { page: { id: third } } },
-            { text: { content: "." } },
-          ];
-        }
-
-        const page = await notion.pageRetrieve({ page_id: doc.id });
-        if (page) remoteIds.push(page.id);
-      } catch {
-        // no op
-      }
-    }
-
-    return [];
+    return [{ text: { content } }];
   };
 
   updatePageMetadata = async (

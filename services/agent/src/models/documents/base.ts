@@ -1,3 +1,4 @@
+import { Doc } from "@prisma/client";
 import {
   BlockDoc,
   CommentDoc,
@@ -20,4 +21,22 @@ export const upsertDoc = async <
 
   debug(`${doc.type.toLowerCase()} upserted, ${doc.title}`);
   return doc;
+};
+
+export const searchDocs = async (search: string) => {
+  const query = search
+    .replace(/[()|&:*!'"]/g, " ")
+    .trim()
+    .split(/\s+/)
+    .join(" & ");
+
+  const rawQuery = `
+  SELECT id, "parentId", type, title, data, metadata, "createdAt", "updatedAt" FROM "Doc"
+  WHERE
+    "vector" @@ to_tsquery('english', '${query}')
+  ORDER BY ts_rank("vector", to_tsquery('english', '${query}')) DESC
+  LIMIT 10;
+`;
+  const results = await prisma.$queryRawUnsafe(rawQuery);
+  return results as Doc[];
 };

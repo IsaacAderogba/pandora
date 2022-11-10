@@ -137,6 +137,31 @@ export const $blockText = (block: BlockObjectResponse) => {
   }
 };
 
+export const $blockPageMentions = (block: BlockObjectResponse) => {
+  const mentions: string[] = [];
+
+  switch (block.type) {
+    case "heading_1":
+    case "heading_2":
+    case "heading_3":
+    case "paragraph":
+    case "callout":
+    case "quote":
+    case "bulleted_list_item":
+    case "numbered_list_item":
+    case "to_do":
+    case "toggle":
+      for (const text of (block as any)[block.type].rich_text) {
+        if (text.type === "mention" && text.mention.type === "page") {
+          mentions.push(text.mention.page.id);
+        }
+      }
+      break;
+  }
+
+  return mentions;
+};
+
 // shared
 export const $richTextsPlainText = (richTexts: RichTextItemResponse[]) =>
   richTexts.map(({ plain_text }) => plain_text).join("");
