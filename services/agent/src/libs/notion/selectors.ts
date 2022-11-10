@@ -97,6 +97,10 @@ export const $commentText = (comment: CommentObjectResponse) => {
   return $richTextsPlainText(comment.rich_text);
 };
 
+export const $commentPageMentions = (comment: CommentObjectResponse) => {
+  return $mentions(comment.rich_text);
+};
+
 // block selectors
 export const $blockDoc = (
   block: BlockObjectResponse,
@@ -138,8 +142,6 @@ export const $blockText = (block: BlockObjectResponse) => {
 };
 
 export const $blockPageMentions = (block: BlockObjectResponse) => {
-  const mentions: string[] = [];
-
   switch (block.type) {
     case "heading_1":
     case "heading_2":
@@ -151,18 +153,22 @@ export const $blockPageMentions = (block: BlockObjectResponse) => {
     case "numbered_list_item":
     case "to_do":
     case "toggle":
-      for (const text of (block as any)[block.type].rich_text) {
-        if (text.type === "mention" && text.mention.type === "page") {
-          mentions.push(text.mention.page.id);
-        }
-      }
-      break;
+      return $mentions((block as any)[block.type].rich_text);
+    default:
+      return [];
   }
-
-  return mentions;
 };
 
 // shared
+export const $mentions = (richTexts: RichTextItemResponse[]) => {
+  const mentions: string[] = [];
+  for (const text of richTexts) {
+    if (text.type === "mention" && text.mention.type === "page") {
+      mentions.push(text.mention.page.id);
+    }
+  }
+  return mentions;
+};
 export const $richTextsPlainText = (richTexts: RichTextItemResponse[]) =>
   richTexts.map(({ plain_text }) => plain_text).join("");
 

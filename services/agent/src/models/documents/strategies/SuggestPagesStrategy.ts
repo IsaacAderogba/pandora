@@ -19,6 +19,7 @@ import {
 import {
   $blockPageMentions,
   $blockText,
+  $commentPageMentions,
   $commentText,
   $pageDoc,
   $pageStatus,
@@ -35,7 +36,7 @@ export class SuggestPagesStrategy implements PageStrategy {
   run: PageStrategy["run"] = async (_, page) => {
     if (await this.shouldSkipStrategy(page)) return page;
 
-    const childDocs = await this.fetchChildDocs(page);
+    const childDocs = await this.fetchChildBlocks(page);
     const note = this.prepareNote(page, childDocs);
     const processedNote = await actions.extraction.keywords({ notes: [note] });
     const keywords = this.prepareKeywords(processedNote);
@@ -71,14 +72,14 @@ export class SuggestPagesStrategy implements PageStrategy {
     });
   };
 
-  fetchChildDocs = async (doc: PageDoc | BlockDoc): Promise<BlockDoc[]> => {
+  fetchChildBlocks = async (doc: PageDoc | BlockDoc): Promise<BlockDoc[]> => {
     const docs: BlockDoc[] = [];
     const ids = doc.metadata.blockIds;
 
     const results = await prisma.doc.findMany({ where: { id: { in: ids } } });
     for (const result of results) {
       if (isBlockDoc(result)) {
-        docs.push(result, ...(await this.fetchChildDocs(result)));
+        docs.push(result, ...(await this.fetchChildBlocks(result)));
       }
     }
 
@@ -114,15 +115,25 @@ export class SuggestPagesStrategy implements PageStrategy {
   };
 
   preparePagesComment = async (
-    page: PageDoc,
+    { id, metadata }: PageDoc,
     docs: BlockDoc[],
     keywords: string[]
   ): Promise<RichTextRequest[]> => {
-    const blacklist = new Set<string>([page.id]);
-    docs.forEach(({ id, data, parentId }) => {
+    const blacklist = new Set<string>([id]);
+
+    const comments = await prisma.doc.findMany({
+      where: { id: { in: metadata.commentIds } },
+    });
+
+    [...docs, ...comments].forEach((doc) => {
       blacklist.add(id);
-      if (parentId) blacklist.add(parentId);
-      $blockPageMentions(data).forEach((id) => blacklist.add(id));
+      if (doc.parentId) blacklist.add(doc.parentId);
+
+      if (isBlockDoc(doc)) {
+        $blockPageMentions(doc.data).forEach((id) => blacklist.add(id));
+      } else if (isCommentDoc(doc)) {
+        $commentPageMentions(doc.data).forEach((id) => blacklist.add(id));
+      }
     });
 
     const pageDocs: PageDoc[] = [];
