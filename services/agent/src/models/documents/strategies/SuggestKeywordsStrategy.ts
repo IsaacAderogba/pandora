@@ -99,7 +99,7 @@ export class SuggestKeywordsStrategy implements PageStrategy {
   prepareKeywordsComment = (
     results: ExtractionKeywordsResult
   ): RichTextRequest[] => {
-    let keywords: string[] = [];
+    const keywords: string[] = [];
 
     for (const { metadata } of results) {
       if (!metadata) continue;
@@ -111,14 +111,11 @@ export class SuggestKeywordsStrategy implements PageStrategy {
     let content: string;
     if (keywords.length === 1) {
       content = `${keywords[0]} is a candidate keyword for this page.`;
-      keywords = [keywords[0]];
     } else if (keywords.length === 2) {
       content = `${keywords[0]} and ${keywords[1]} are candidate keywords for this page.`;
-      keywords = [keywords[0], keywords[1]];
     } else {
       const [first, second, third] = keywords.slice(0, 3);
       content = `${first}, ${second}, and ${third} are candidate keywords for this page.`;
-      keywords = [first, second, third];
     }
 
     return [{ text: { content } }];
