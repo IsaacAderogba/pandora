@@ -1,4 +1,10 @@
-import { BlockObjectResponse } from "./types";
+import { BlockObjectResponse, BlockObjectRequest } from "./types";
+
+type Include<T, U> = T extends U ? T : never;
+export type ExtractBlock<T extends BlockObjectResponse["type"]> = {
+  response: Extract<BlockObjectResponse, { type: T }>;
+  request: Include<BlockObjectRequest, { type?: T }>;
+};
 
 export type AudioBlockResponse = Extract<
   BlockObjectResponse,
@@ -78,10 +84,10 @@ export type NumberedListItemBlockResponse = Extract<
   BlockObjectResponse,
   { type: "numbered_list_item" }
 >;
-export type ParagraphBlockResponse = Extract<
-  BlockObjectResponse,
-  { type: "paragraph" }
->;
+
+export type ParagraphBlockResponse = ExtractBlock<"paragraph">["response"];
+export type ParagraphBlockRequest = ExtractBlock<"paragraph">["request"];
+
 export type PDFBlockResponse = Extract<BlockObjectResponse, { type: "pdf" }>;
 export type QuoteBlockResponse = Extract<
   BlockObjectResponse,
@@ -120,3 +126,8 @@ export type VideoBlockResponse = Extract<
   BlockObjectResponse,
   { type: "video" }
 >;
+
+export type RichTextResponse =
+  ParagraphBlockResponse["paragraph"]["rich_text"][0];
+export type RichTextRequest =
+  ParagraphBlockRequest["paragraph"]["rich_text"][0];

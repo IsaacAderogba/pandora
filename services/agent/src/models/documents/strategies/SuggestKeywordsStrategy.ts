@@ -7,6 +7,7 @@ import {
   createSentence,
 } from "../../../libs/actions/utils";
 import { tokenizeSentences } from "../../../libs/compromise/utils";
+import { RichTextRequest } from "../../../libs/notion/blocks";
 import { notion } from "../../../libs/notion/client";
 import {
   isBlockDoc,
@@ -27,17 +28,22 @@ import { KEYWORDS_DATABASE_ID, PANDORA_ID } from "../../../utils/consts";
 import { upsertComment } from "../comment";
 import { PageStrategy } from "./Strategy";
 
-export class RelateKeywordsStrategy implements PageStrategy {
+export class SuggestKeywordsStrategy implements PageStrategy {
   run: PageStrategy["run"] = async (_, page) => {
     if (await this.shouldSkipStrategy(page)) return page;
 
     const childDocs = await this.fetchChildDocs(page);
     const note = this.createActionNote(page, childDocs);
     const processedNote = await actions.extraction.keywords({ notes: [note] });
-    const commentId = await this.createKeywordsComment(page, processedNote);
-    if (!commentId) return page;
+    const rich_text = this.prepareKeywordsComment(processedNote);
+    if (!rich_text.length) return page;
 
-    return this.updatePageMetadata(page, commentId);
+    const comment = await notion.commentCreate({
+      parent: { page_id: page.id },
+      rich_text,
+    });
+    await upsertComment(comment, page.id);
+    return this.updatePageMetadata(page, comment.id);
   };
 
   shouldSkipStrategy = async ({
@@ -90,10 +96,9 @@ export class RelateKeywordsStrategy implements PageStrategy {
     );
   };
 
-  createKeywordsComment = async (
-    page: PageDoc,
+  prepareKeywordsComment = (
     results: ExtractionKeywordsResult
-  ): Promise<string | undefined> => {
+  ): RichTextRequest[] => {
     const keywords: string[] = [];
 
     for (const { metadata } of results) {
@@ -101,26 +106,19 @@ export class RelateKeywordsStrategy implements PageStrategy {
       keywords.push(...Object.values(metadata.keywords).map((k) => k.term));
     }
 
-    if (!keywords.length) return;
-    const createComment = async (content: string) => {
-      const comment = await notion.commentCreate({
-        parent: { page_id: page.id },
-        rich_text: [{ text: { content } }],
-      });
-      return (await upsertComment(comment, page.id)).id;
-    };
+    if (!keywords.length) return [];
 
+    let content: string;
     if (keywords.length === 1) {
-      const message = `${keywords[0]} is a candidate keyword for this page.`;
-      return await createComment(message);
+      content = `${keywords[0]} is a candidate keyword for this page.`;
     } else if (keywords.length === 2) {
-      const message = `${keywords[0]} and ${keywords[1]} are candidate keywords for this page.`;
-      return await createComment(message);
+      content = `${keywords[0]} and ${keywords[1]} are candidate keywords for this page.`;
     } else {
       const [first, second, third] = keywords.slice(0, 3);
-      const message = `${first}, ${second}, and ${third} are candidate keywords for this page.`;
-      return await createComment(message);
+      content = `${first}, ${second}, and ${third} are candidate keywords for this page.`;
     }
+
+    return [{ text: { content } }];
   };
 
   updatePageMetadata = async (
