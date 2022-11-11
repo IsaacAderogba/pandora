@@ -68,8 +68,6 @@ def keywords_rank(text: str):
             continue
 
         doc_chunk = nlp(chunk.text)
-        if (len(doc_chunk.ents) > 0):
-            continue
 
         lemmas: list[str] = []
 
