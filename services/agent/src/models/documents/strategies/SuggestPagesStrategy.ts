@@ -107,7 +107,7 @@ export class SuggestPagesStrategy implements PageStrategy {
     const keywords: string[] = [];
     for (const { metadata } of results) {
       if (!metadata) continue;
-      keywords.push(...Object.values(metadata.keywords).map((k) => k.term));
+      keywords.push(...Object.entries(metadata.keywords).map(([lexeme]) => lexeme));
     }
     return keywords.slice(0, 5);
   };
