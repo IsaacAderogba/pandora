@@ -58,8 +58,8 @@ def keywords_rank(text: str):
     results: list[tuple[str, str, float]] = []
     doc = nlp(text)
 
-    blacklist = {"summary"}
     for phrase in doc._.phrases[:10]:
+        blacklist = {"summary"}
         chunk = phrase.chunks[0]
 
         if any(p in chunk.text for p in string.punctuation):
@@ -75,6 +75,7 @@ def keywords_rank(text: str):
 
         has_stopword = False
         has_blacklist = False
+
         for token in doc_chunk:
             text = token.text.lower()
             if text in stopwords:
@@ -82,7 +83,8 @@ def keywords_rank(text: str):
 
             if text in blacklist:
                 has_blacklist = True
-
+            
+            blacklist.add(text)
             lemmas.append(token.lemma_.lower())
 
         if has_stopword == True or has_blacklist == True:
