@@ -19,8 +19,6 @@ export class TabulatePapersStrategy implements PageStrategy {
       limit: 100,
     });
 
-    console.log("papers", papers);
-
     return page;
   };
 
