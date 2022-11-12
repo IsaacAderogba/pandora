@@ -97,14 +97,13 @@ export type SyncedBlockResponse = Extract<
   BlockObjectResponse,
   { type: "synced_block" }
 >;
-export type TableBlockResponse = Extract<
-  BlockObjectResponse,
-  { type: "table" }
->;
-export type TableRowBlockResponse = Extract<
-  BlockObjectResponse,
-  { type: "table_row" }
->;
+
+export type TableBlockResponse = ExtractBlock<"table">["response"];
+export type TableBlockRequest = ExtractBlock<"table">["request"];
+
+export type TableRowBlockResponse = ExtractBlock<"table_row">["response"];
+export type TableRowBlockRequest = ExtractBlock<"table_row">["request"];
+
 export type TableOfContentsBlockResponse = Extract<
   BlockObjectResponse,
   { type: "table_of_contents" }
