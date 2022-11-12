@@ -12,7 +12,7 @@ import {
 
 @rateLimiter({ duration: 30000, points: 10 })
 class Scholar {
-  client = axios.create({
+  private client = axios.create({
     headers: {
       "Content-Type": "application/json",
       authorization: `Token ${process.env.READWISE_SECRET}`,
@@ -27,7 +27,7 @@ class Scholar {
     const { data } = await this.client.get<PaginationResult<Paper>>(
       "/graph/v1/paper/search",
       {
-        params: { ...params, fields: paperFields },
+        params: { ...params, fields: paperFields.join(",") },
       }
     );
 
@@ -38,7 +38,7 @@ class Scholar {
   async paperDetails(id: string): Promise<PaperDetail> {
     const { data } = await this.client.get<PaperDetail>(
       `/graph/v1/paper/${id}`,
-      { params: { fields: paperDetailFields } }
+      { params: { fields: paperDetailFields.join(",") } }
     );
 
     return data;
@@ -51,7 +51,7 @@ class Scholar {
   ): Promise<Paper[]> {
     const { data } = await this.client.get<{ recommendPapers: Paper[] }>(
       `/recommendations/v1/papers/forpaper/${id}`,
-      { params: { limit, fields: paperFields } }
+      { params: { limit, fields: paperFields.join(",") } }
     );
 
     return data.recommendPapers;
