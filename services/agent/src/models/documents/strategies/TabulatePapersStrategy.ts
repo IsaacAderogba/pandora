@@ -1,3 +1,9 @@
+import { Note } from "../../../libs/actions/types";
+import {
+  createNote,
+  createSection,
+  createSentence,
+} from "../../../libs/actions/utils";
 import { isBlockDoc } from "../../../libs/notion/narrowings";
 import {
   $pageStatus,
@@ -8,6 +14,7 @@ import {
 import { PageDoc } from "../../../libs/notion/types";
 import { prisma } from "../../../libs/prisma";
 import { scholar } from "../../../libs/scholar/client";
+import { Paper } from "../../../libs/scholar/types";
 import { KEYWORDS_DATABASE_ID } from "../../../utils/consts";
 import { PageStrategy } from "./Strategy";
 
@@ -40,5 +47,17 @@ export class TabulatePapersStrategy implements PageStrategy {
       }
       return false;
     });
+  };
+
+  createActionNotes = (papers: Paper[]): Note[] => {
+    return papers.map(({ paperId, title, abstract }) =>
+      createNote(paperId, null, [
+        createSection(
+          null,
+          null,
+          [title, abstract].map((text) => createSentence(null, null, text))
+        ),
+      ])
+    );
   };
 }
