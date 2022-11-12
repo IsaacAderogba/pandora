@@ -1,3 +1,4 @@
+import { actions } from "../../../libs/actions/client";
 import { Note } from "../../../libs/actions/types";
 import {
   createNote,
@@ -21,10 +22,19 @@ import { PageStrategy } from "./Strategy";
 export class TabulatePapersStrategy implements PageStrategy {
   run: PageStrategy["run"] = async (_, page) => {
     if (await this.shouldSkipStrategy(page)) return page;
+
+    const title = $pageTitle(page.data);
     const { data: papers } = await scholar.paperSearch({
-      query: $pageTitle(page.data),
+      query: title,
       limit: 100,
     });
+
+    const scoredNotes = await actions.similarity.cosine({
+      text: title,
+      notes: this.createActionNotes(papers),
+    });
+
+    console.log(scoredNotes);
 
     return page;
   };
@@ -38,8 +48,13 @@ export class TabulatePapersStrategy implements PageStrategy {
 
     const ids = metadata.blockIds;
     const children = await prisma.doc.findMany({ where: { id: { in: ids } } });
+    const tableIds = children
+      .filter(isBlockDoc)
+      .filter((doc) => doc.data.type === "table")
+      .map((table) => table.id);
 
-    return children.filter(isBlockDoc).some(({ data }) => {
+    const rows = await prisma.doc.findMany({ where: { id: { in: tableIds } } });
+    return rows.filter(isBlockDoc).some(({ data }) => {
       if (data.type === "table_row") {
         return data.table_row.cells.map(
           (cell) => $richTextsPlainText(cell) === "Paper"
@@ -55,7 +70,11 @@ export class TabulatePapersStrategy implements PageStrategy {
         createSection(
           null,
           null,
-          [title, abstract].map((text) => createSentence(null, null, text))
+          [title, abstract]
+            .filter((text) => !!text)
+            .map((text) => {
+              return createSentence(null, null, text);
+            })
         ),
       ])
     );
