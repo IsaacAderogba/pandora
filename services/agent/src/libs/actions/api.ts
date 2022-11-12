@@ -32,3 +32,14 @@ export type SummarizationExtractiveBody = {
 };
 
 export type SummarizationExtractiveResult = Note[];
+
+export type SimilarityCosineBody = {
+  notes: Note[];
+  text: string;
+};
+
+export type SimilarityCosineResult = Note<
+  { similarity_cosine: number },
+  { similarity_cosine: number },
+  { similarity_cosine: number }
+>[];

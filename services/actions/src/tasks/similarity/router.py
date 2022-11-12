@@ -9,10 +9,10 @@ similarity_router = APIRouter()
 
 
 class RequestBody(BaseModel):
-    target: Note
+    text: str
     notes: list[Note]
 
 
 @similarity_router.post("/cosine")
 async def cosine(body: RequestBody):
-    return cosine_similar_notes(body.target, body.notes)
+    return cosine_similar_notes(body.text, body.notes)
