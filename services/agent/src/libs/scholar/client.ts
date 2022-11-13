@@ -49,12 +49,12 @@ class Scholar {
     id: string,
     { limit = 10 }: Partial<PaperRecommendationParameters> = {}
   ): Promise<Paper[]> {
-    const { data } = await this.client.get<{ recommendPapers: Paper[] }>(
+    const { data } = await this.client.get<{ recommendedPapers: Paper[] }>(
       `/recommendations/v1/papers/forpaper/${id}`,
       { params: { limit, fields: paperFields.join(",") } }
     );
 
-    return data.recommendPapers;
+    return data.recommendedPapers;
   }
 }
 

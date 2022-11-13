@@ -1,11 +1,13 @@
+import { Nullable } from "../../utils/types";
+
 export interface Paper {
   paperId: string;
   url: string;
   title: string;
-  abstract: string;
+  abstract: Nullable<string>;
   year: number;
-  fieldsOfStudy: string[];
-  publicationDate: string;
+  fieldsOfStudy: Nullable<string[]>;
+  publicationDate: Nullable<string>;
   authors: { authorId: string; name: string }[];
 }
 
@@ -32,15 +34,15 @@ export interface PaperDetail extends Paper {
   citationCount: number;
   influentialCitationCount: number;
   publicationTypes: string[];
-  journal: {
+  journal: Nullable<{
     name: string;
     pages: string;
     volume: string;
-  };
-  tldr: {
+  }>;
+  tldr: Nullable<{
     model: string;
     text: string;
-  };
+  }>;
 }
 
 export const paperDetailFields = [

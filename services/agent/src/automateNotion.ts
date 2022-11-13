@@ -18,8 +18,8 @@ import { KEYWORDS_DATABASE_ID } from "./utils/consts";
 
 const databaseStrategies: DatabaseStrategy[] = [];
 const pageStrategies: PageStrategy[] = [
-  // new SuggestKeywordsStrategy(),
-  // new SuggestPagesStrategy(),
+  new SuggestKeywordsStrategy(),
+  new SuggestPagesStrategy(),
   new TabulatePapersStrategy(),
 ];
 const blockStrategies: BlockStrategy[] = [];
@@ -36,9 +36,7 @@ export const automateNotion = async () => {
 const automateWorkspace = async () => {
   const databases = await notion.databaseListAll({});
 
-  for (const database of databases.filter(
-    (db) => db.id === KEYWORDS_DATABASE_ID
-  )) {
+  for (const database of databases) {
     await withError(async () => {
       await automateDatabase(database.id, databaseStrategies, async (pageIds) =>
         upsertDatabase(database, { pageIds })

@@ -32,14 +32,12 @@ export class TabulatePapersStrategy implements PageStrategy {
     if (await this.shouldSkipStrategy(page)) return page;
 
     const title = $pageTitle(page.data);
-    const { data: papers } = await scholar.paperSearch({
-      query: title,
-      limit: 100,
-    });
+    const { data } = await scholar.paperSearch({ query: title, limit: 100 });
+    const papers = this.filterPapers(data);
 
     const scoredNotes = await actions.similarity.cosine({
       text: title,
-      notes: this.createActionNotes(papers),
+      notes: this.createActionNotes(this.filterPapers(papers)),
     });
 
     const processedPapers = this.processNotesToPapers(scoredNotes, papers);
@@ -48,10 +46,12 @@ export class TabulatePapersStrategy implements PageStrategy {
     for (const paper of processedPapers) {
       const [detail, recommended] = await Promise.all([
         scholar.paperDetails(paper.paperId),
-        scholar.paperRecommendations(paper.paperId, { limit: 10 }),
+        scholar.paperRecommendations(paper.paperId, { limit: 5 }),
       ]);
 
-      table.table.children.push(this.prepareTableRow(detail, recommended));
+      table.table.children.push(
+        this.prepareTableRow(detail, this.filterPapers(recommended))
+      );
     }
 
     const { results } = await notion.blockAppend({
@@ -83,10 +83,12 @@ export class TabulatePapersStrategy implements PageStrategy {
       .filter((doc) => doc.data.type === "table")
       .map((table) => table.id);
 
-    const rows = await prisma.doc.findMany({ where: { id: { in: tableIds } } });
+    const rows = await prisma.doc.findMany({
+      where: { parentId: { in: tableIds } },
+    });
     return rows.filter(isBlockDoc).some(({ data }) => {
       if (data.type === "table_row") {
-        return data.table_row.cells.map(
+        return data.table_row.cells.some(
           (cell) => $richTextsPlainText(cell) === "Paper"
         );
       }
@@ -103,12 +105,17 @@ export class TabulatePapersStrategy implements PageStrategy {
           [title, abstract]
             .filter((text) => !!text)
             .map((text) => {
-              return createSentence(null, null, text);
+              return createSentence(null, null, text!);
             })
         ),
       ])
     );
   };
+
+  filterPapers = (papers: Paper[]) =>
+    papers.filter(({ authors, abstract, title, year, url }) =>
+      [authors.length, abstract, title, year, url].every(Boolean)
+    );
 
   processNotesToPapers = (
     notes: SimilarityCosineResult,
@@ -119,7 +126,7 @@ export class TabulatePapersStrategy implements PageStrategy {
       .sort(
         (a, b) => b.metadata.similarity_cosine - a.metadata.similarity_cosine
       )
-      .slice(0, 5);
+      .slice(0, 4);
 
     return sortedNotes.map((note) => papersMap.get(note.id!)!);
   };
@@ -129,7 +136,7 @@ export class TabulatePapersStrategy implements PageStrategy {
       type: "table",
       table: {
         table_width: 3,
-        has_row_header: true,
+        has_column_header: true,
         children: [
           {
             table_row: {
@@ -155,30 +162,42 @@ export class TabulatePapersStrategy implements PageStrategy {
       title,
       year,
       url,
+      citationCount,
     }: PaperDetail,
-    recommended: Paper[]
+    recommended: Paper[] = []
   ): TableRowBlockRequest => {
+    const titleRow = {
+      text: { content: `${title} (${year})`, link: { url } },
+      annotations: { color: "brown" },
+    };
+
+    const fields = [journal?.name, ...(fieldsOfStudy || [])].filter(Boolean);
+    const fieldsRow = fields.length
+      ? [{ text: { content: `\n📖 ` + fields.join(", ") } }]
+      : [];
+    const authorsRow = {
+      text: {
+        content: "\n👥 " + authors.map((author) => author.name).join(", "),
+      },
+    };
+    const citationsRow = { text: { content: `\n🔗 ${citationCount || 0}` } };
+
+    const tldrRow = tldr?.text
+      ? [
+          {
+            text: { content: `\n\n${tldr.text}` },
+            annotations: { italic: true },
+          },
+        ]
+      : [];
+
     return {
       table_row: {
         cells: [
-          [
-            { text: { content: `${title} (${year})`, link: { url } } },
-            {
-              text: {
-                content: `\nIn ` + [journal.name, ...fieldsOfStudy].join(", "),
-              },
-            },
-            {
-              text: {
-                content:
-                  "\nBy " + authors.map((author) => author.name).join(", "),
-              },
-            },
-            { text: { content: `\n${tldr}` } },
-          ],
-          [{ text: { content: abstract } }],
+          [titleRow, ...fieldsRow, authorsRow, citationsRow, ...tldrRow],
+          [{ text: { content: abstract || "" } }],
           recommended.map(({ title, year, url }) => ({
-            text: { content: `${title} (${year})`, link: { url } },
+            text: { content: `${title} (${year})\n\n`, link: { url } },
           })),
         ],
       },
