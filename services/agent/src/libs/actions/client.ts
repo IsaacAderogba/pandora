@@ -5,6 +5,8 @@ import {
   ExtractionKeywordsResult,
   RankingTextRankBody,
   RankingTextRankResult,
+  SimilarityCosineBody,
+  SimilarityCosineResult,
   SummarizationExtractiveBody,
   SummarizationExtractiveResult,
 } from "./api";
@@ -51,6 +53,18 @@ class Actions {
     body: SummarizationExtractiveBody
   ): Promise<SummarizationExtractiveResult> => {
     return this.postRequest("/summarization/extractive", body);
+  };
+
+  get similarity() {
+    return {
+      cosine: this.similarityCosine,
+    };
+  }
+
+  private similarityCosine = async (
+    body: SimilarityCosineBody
+  ): Promise<SimilarityCosineResult> => {
+    return this.postRequest("/similarity/cosine", body);
   };
 
   private postRequest = async <T, K>(path: string, body: K): Promise<T> => {

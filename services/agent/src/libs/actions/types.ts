@@ -1,6 +1,6 @@
 import { Nullable } from "../../utils/types";
 
-export type Id = string | number;
+export type Id = string;
 
 export type Color =
   | "default"
@@ -35,17 +35,17 @@ export type Annotation = {
 export type Sentence<R = null> = {
   id: Nullable<Id>;
   text: string;
-  metadata: Nullable<R>;
+  metadata: R;
 };
 
 export type Section<K = null, R = null> = {
   id: Nullable<Id>;
   sentences: Sentence<R>[];
-  metadata: Nullable<K>;
+  metadata: K;
 };
 
 export type Note<T = null, K = null, R = null> = {
   id: Nullable<Id>;
   sections: Section<K, R>[];
-  metadata: Nullable<T>;
+  metadata: T;
 };

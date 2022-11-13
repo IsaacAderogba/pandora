@@ -136,6 +136,10 @@ export const $blockText = (block: BlockObjectResponse) => {
       return block.child_page.title;
     case "child_database":
       return block.child_database.title;
+    case "table_row":
+      return block.table_row.cells
+        .map((cell) => $richTextsPlainText(cell))
+        .join(" ");
     default:
       return "";
   }

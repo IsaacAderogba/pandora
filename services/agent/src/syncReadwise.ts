@@ -187,7 +187,7 @@ const summarizeHighlights = async (
 ): Promise<HighlightSummaries> => {
   const notes: Note[] = highlights.map(({ id, text, note }) => {
     return {
-      id,
+      id: id.toString(),
       metadata: null,
       sections: [
         {

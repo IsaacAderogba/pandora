@@ -13,11 +13,14 @@ import {
 } from "./models/documents/strategies/Strategy";
 import { SuggestKeywordsStrategy } from "./models/documents/strategies/SuggestKeywordsStrategy";
 import { SuggestPagesStrategy } from "./models/documents/strategies/SuggestPagesStrategy";
+import { TabulatePapersStrategy } from "./models/documents/strategies/TabulatePapersStrategy";
+import { KEYWORDS_DATABASE_ID } from "./utils/consts";
 
 const databaseStrategies: DatabaseStrategy[] = [];
 const pageStrategies: PageStrategy[] = [
   new SuggestKeywordsStrategy(),
   new SuggestPagesStrategy(),
+  new TabulatePapersStrategy(),
 ];
 const blockStrategies: BlockStrategy[] = [];
 const commentStrategies: CommentStrategy[] = [];
