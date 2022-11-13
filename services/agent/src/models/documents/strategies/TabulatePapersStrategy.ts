@@ -22,7 +22,7 @@ import {
 import { PageDoc } from "../../../libs/notion/types";
 import { prisma } from "../../../libs/prisma";
 import { scholar } from "../../../libs/scholar/client";
-import { Paper } from "../../../libs/scholar/types";
+import { Paper, PaperDetail } from "../../../libs/scholar/types";
 import { KEYWORDS_DATABASE_ID } from "../../../utils/consts";
 import { upsertBlock } from "../block";
 import { PageStrategy } from "./Strategy";
@@ -46,11 +46,12 @@ export class TabulatePapersStrategy implements PageStrategy {
 
     const table = this.prepareTable();
     for (const paper of processedPapers) {
-      const relatedPapers = await scholar.paperRecommendations(paper.paperId, {
-        limit: 5,
-      });
+      const [detail, recommended] = await Promise.all([
+        scholar.paperDetails(paper.paperId),
+        scholar.paperRecommendations(paper.paperId, { limit: 10 }),
+      ]);
 
-      table.table.children.push(this.prepareTableRow(paper, relatedPapers));
+      table.table.children.push(this.prepareTableRow(detail, recommended));
     }
 
     const { results } = await notion.blockAppend({
@@ -145,9 +146,44 @@ export class TabulatePapersStrategy implements PageStrategy {
   };
 
   prepareTableRow = (
-    paper: Paper,
-    relatedPapers: Paper[]
-  ): TableRowBlockRequest => {};
+    {
+      abstract,
+      authors,
+      fieldsOfStudy,
+      journal,
+      tldr,
+      title,
+      year,
+      url,
+    }: PaperDetail,
+    recommended: Paper[]
+  ): TableRowBlockRequest => {
+    return {
+      table_row: {
+        cells: [
+          [
+            { text: { content: `${title} (${year})`, link: { url } } },
+            {
+              text: {
+                content: `\nIn ` + [journal.name, ...fieldsOfStudy].join(", "),
+              },
+            },
+            {
+              text: {
+                content:
+                  "\nBy " + authors.map((author) => author.name).join(", "),
+              },
+            },
+            { text: { content: `\n${tldr}` } },
+          ],
+          [{ text: { content: abstract } }],
+          recommended.map(({ title, year, url }) => ({
+            text: { content: `${title} (${year})`, link: { url } },
+          })),
+        ],
+      },
+    };
+  };
 
   updatePageMetadata = async (
     page: PageDoc,
