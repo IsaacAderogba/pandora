@@ -78,7 +78,7 @@ def keywords_rank(text: str):
 
         for token in doc_chunk:
             text = token.text.lower()
-            if text in stopwords:
+            if text in stopwords or len(text) <= 2:
                 has_stopword = True
 
             if text in blacklist:
