@@ -19,7 +19,7 @@ import { KEYWORDS_DATABASE_ID } from "./utils/consts";
 const databaseStrategies: DatabaseStrategy[] = [];
 const pageStrategies: PageStrategy[] = [
   new SuggestKeywordsStrategy(),
-  new SuggestPagesStrategy(),
+  // new SuggestPagesStrategy(),
   new TabulatePapersStrategy(),
 ];
 const blockStrategies: BlockStrategy[] = [];
