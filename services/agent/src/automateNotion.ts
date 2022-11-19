@@ -20,7 +20,7 @@ const databaseStrategies: DatabaseStrategy[] = [];
 const pageStrategies: PageStrategy[] = [
   new SuggestKeywordsStrategy(),
   // new SuggestPagesStrategy(),
-  new TabulatePapersStrategy(),
+  // new TabulatePapersStrategy(),
 ];
 const blockStrategies: BlockStrategy[] = [];
 const commentStrategies: CommentStrategy[] = [];
