@@ -41,10 +41,10 @@ spec:
           resources:
             requests:
               cpu: 250m
-              memory: 384Mi
+              memory: 256Mi
             limits:
-              cpu: 500m
-              memory: 512Mi
+              cpu: 375m
+              memory: 384Mi
           envFrom:
             - configMapRef:
                 name: pandora-config
