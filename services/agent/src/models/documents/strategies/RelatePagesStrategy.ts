@@ -1,3 +1,4 @@
+import { chunk } from "lodash";
 import { actions } from "../../../libs/actions/client";
 import { Note } from "../../../libs/actions/types";
 import {
@@ -5,7 +6,11 @@ import {
   createSection,
   createSentence,
 } from "../../../libs/actions/utils";
-import { isBlockDoc } from "../../../libs/notion/narrowings";
+import {
+  isBlockDoc,
+  isDatabaseDoc,
+  isPageDoc,
+} from "../../../libs/notion/narrowings";
 import {
   $blockText,
   $pageStatus,
@@ -28,7 +33,26 @@ export class RelatePagesStrategy implements PageStrategy {
     const initialized = await actions.cache.get<boolean>(key);
 
     if (!initialized) {
-      // do initialization
+      const results = await prisma.doc.findMany({
+        where: { type: "DATABASE" },
+      });
+
+      for (const db of results.filter(isDatabaseDoc)) {
+        const results = await prisma.doc.findMany({
+          where: { id: { in: db.metadata.pageIds } },
+        });
+
+        for (const pages of chunk(results.filter(isPageDoc), 20)) {
+          const notes = await Promise.all(
+            pages.map(async (page) =>
+              this.prepareNote(page, await this.loadBlocks(page))
+            )
+          );
+
+          await actions.embeddings.store({ notes });
+        }
+      }
+
       await actions.cache.set(key, true);
     }
 
