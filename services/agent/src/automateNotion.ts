@@ -18,11 +18,13 @@ import { RelateKeywordsStrategy } from "./models/documents/strategies/RelateKeyw
 import { prisma } from "./libs/prisma";
 import { isDatabaseDoc } from "./libs/notion/narrowings";
 import { uniq } from "lodash";
+import { RelatePagesStrategy } from "./models/documents/strategies/RelatePagesStrategy";
 
 const databaseStrategies: DatabaseStrategy[] = [];
 const pageStrategies: PageStrategy[] = [
-  new SuggestKeywordsStrategy(),
-  new RelateKeywordsStrategy(),
+  // new SuggestKeywordsStrategy(),
+  // new RelateKeywordsStrategy(),
+  new RelatePagesStrategy(),
   // new SuggestPagesStrategy(),
   // new TabulatePapersStrategy(),
 ];

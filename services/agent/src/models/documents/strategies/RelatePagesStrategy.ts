@@ -44,9 +44,9 @@ export class RelatePagesStrategy implements PageStrategy {
 
         for (const pages of chunk(results.filter(isPageDoc), 20)) {
           const notes = await Promise.all(
-            pages.map(async (page) =>
-              this.prepareNote(page, await this.loadBlocks(page))
-            )
+            pages.map(async (page) => {
+              return this.prepareNote(page, await this.loadText(page));
+            })
           );
 
           await actions.embeddings.store({ notes });
@@ -57,35 +57,26 @@ export class RelatePagesStrategy implements PageStrategy {
     }
 
     await actions.embeddings.store({
-      notes: [this.prepareNote(page, await this.loadBlocks(page))],
+      notes: [this.prepareNote(page, await this.loadText(page))],
     });
   };
 
-  prepareNote = (page: PageDoc, docs: BlockDoc[]): Note => {
-    return createNote(
-      page.id,
-      null,
-      docs.map((block) => {
-        const text = $blockText(block.data);
-        const sentences = [$pageTitle(page.data), text];
-
-        return createSection(
-          block.id,
-          null,
-          sentences.map((sentence) => createSentence(null, null, sentence))
-        );
-      })
-    );
+  prepareNote = (page: PageDoc, docs: string[]): Note => {
+    return createNote(page.id, null, [
+      createSection(null, null, [
+        createSentence(null, null, [$pageTitle(page.data), ...docs].join(" ")),
+      ]),
+    ]);
   };
 
-  loadBlocks = async (doc: PageDoc | BlockDoc): Promise<BlockDoc[]> => {
-    const docs: BlockDoc[] = [];
-    const ids = doc.metadata.blockIds;
+  loadText = async (doc: PageDoc | BlockDoc): Promise<string[]> => {
+    const docs: string[] = [];
+    const ids = doc.metadata.blockIds || [];
 
     const results = await prisma.doc.findMany({ where: { id: { in: ids } } });
     for (const result of results) {
       if (isBlockDoc(result)) {
-        docs.push(result, ...(await this.loadBlocks(result)));
+        docs.push($blockText(result.data), ...(await this.loadText(result)));
       }
     }
 
