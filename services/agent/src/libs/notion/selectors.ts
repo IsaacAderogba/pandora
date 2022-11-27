@@ -76,6 +76,11 @@ export const $pageStatus = (
   }
 };
 
+export const $pageRelation = (page: PageObjectResponse, relation: string) => {
+  const prop = page.properties[relation];
+  return prop?.type === "relation" ? prop.relation : [];
+};
+
 // comment selectors
 export const $commentDoc = (
   comment: CommentObjectResponse,
