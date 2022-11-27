@@ -16,7 +16,7 @@ import { KEYWORDS_DATABASE_ID } from "../../../utils/consts";
 import { PageStrategy } from "./Strategy";
 
 export class RelateKeywordsStrategy implements PageStrategy {
-  loadedKeywords: LoadedKeywords = new Map();
+  loadedKeywords: Map<string, string> = new Map();
 
   run: PageStrategy["run"] = async (_, page) => {
     await this.loadKeywords();
@@ -124,5 +124,3 @@ export class RelateKeywordsStrategy implements PageStrategy {
     return doc;
   };
 }
-
-type LoadedKeywords = Map<string, string>;
