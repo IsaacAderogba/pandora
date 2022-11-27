@@ -57,6 +57,7 @@ export class SuggestPagesStrategy implements PageStrategy {
     data,
     metadata,
   }: PageDoc): Promise<boolean> => {
+    if (!data.properties["Related"]) return true;
     if ($pageStatus(data)?.status?.name !== "Done") return true;
     if ($parentId(data.parent) === KEYWORDS_DATABASE_ID) return true;
 

@@ -9,6 +9,7 @@ import {
   $blockText,
   $commentText,
   $pageRelation,
+  $pageStatus,
 } from "../../../libs/notion/selectors";
 import { BlockDoc, PageDoc } from "../../../libs/notion/types";
 import { prisma } from "../../../libs/prisma";
@@ -19,13 +20,8 @@ export class RelateKeywordsStrategy implements PageStrategy {
   loadedKeywords: Map<string, string> = new Map();
 
   run: PageStrategy["run"] = async (_, page) => {
-    if (!page.data.properties["Keywords"]) return page;
-    await this.loadKeywords();
-
-    if (page.parentId === KEYWORDS_DATABASE_ID) {
-      this.loadedKeywords.set(page.id, page.title);
-      return page;
-    }
+    await this.loadKeywords(page);
+    if (this.shouldSkipStrategy(page)) return page;
 
     const text = await this.loadText(page);
     const { extractedIds, eligibleIds } = await this.extractKeywordIds(text);
@@ -38,7 +34,14 @@ export class RelateKeywordsStrategy implements PageStrategy {
     return this.updateKeywords(page, mergedIds, eligibleIds);
   };
 
-  loadKeywords = async () => {
+  shouldSkipStrategy = ({ data }: PageDoc): boolean => {
+    if (!data.properties["Keywords"]) return true;
+    if ($pageStatus(data)?.status?.name !== "Done") return true;
+
+    return false;
+  };
+
+  loadKeywords = async (page: PageDoc) => {
     if (this.loadedKeywords.size !== 0) return;
 
     const keywords = await prisma.doc.findMany({
@@ -47,6 +50,10 @@ export class RelateKeywordsStrategy implements PageStrategy {
 
     for (const keyword of keywords.filter(isPageDoc)) {
       this.loadedKeywords.set(keyword.id, keyword.title.toLowerCase());
+    }
+
+    if (page.parentId === KEYWORDS_DATABASE_ID) {
+      this.loadedKeywords.set(page.id, page.title);
     }
   };
 
