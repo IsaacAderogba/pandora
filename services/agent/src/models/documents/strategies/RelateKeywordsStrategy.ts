@@ -27,15 +27,14 @@ export class RelateKeywordsStrategy implements PageStrategy {
     }
 
     const text = await this.loadText(page);
-    const extractedIds = await this.extractKeywordIds(text);
+    const { extractedIds, eligibleIds } = await this.extractKeywordIds(text);
     const existingKeywords = $pageRelation(page.data, "Keywords");
     const existingIds = new Set(existingKeywords.map((keyword) => keyword.id));
+
     if (this.keywordsHaventChanged(extractedIds, existingIds)) return page;
 
     const mergedIds = new Set([...existingIds, ...extractedIds]);
-    if (mergedIds.size === 0 || mergedIds.size >= 25) return page;
-
-    return this.updateKeywords(page, mergedIds);
+    return this.updateKeywords(page, mergedIds, eligibleIds);
   };
 
   loadKeywords = async () => {
@@ -68,14 +67,15 @@ export class RelateKeywordsStrategy implements PageStrategy {
 
   extractKeywordIds = async (text: string[]) => {
     const extractedIds = new Set<string>();
+    const eligibleIds = new Set<string>();
     const keywordsDb = await prisma.doc.findUnique({
       where: { id: KEYWORDS_DATABASE_ID },
     });
 
-    if (!keywordsDb) return extractedIds;
-    if (!isDatabaseDoc(keywordsDb)) return extractedIds;
+    if (!keywordsDb) return { extractedIds, eligibleIds };
+    if (!isDatabaseDoc(keywordsDb)) return { extractedIds, eligibleIds };
 
-    const eligibleIds = new Set(keywordsDb.metadata.pageIds);
+    keywordsDb.metadata.pageIds.forEach((id) => eligibleIds.add(id));
     const joinedText = text.join(" ");
 
     for (const [id, keywordText] of this.loadedKeywords) {
@@ -86,7 +86,7 @@ export class RelateKeywordsStrategy implements PageStrategy {
       }
     }
 
-    return extractedIds;
+    return { extractedIds, eligibleIds };
   };
 
   keywordsHaventChanged = (
@@ -100,20 +100,24 @@ export class RelateKeywordsStrategy implements PageStrategy {
     return true;
   };
 
-  updateKeywords = async (page: PageDoc, mergedIds: Set<string>) => {
-    const data = await notion.pageUpdate({
-      page_id: page.id,
-      properties: {
-        Keywords: {
-          type: "relation",
-          relation: [...mergedIds].map((id) => ({ id })),
-        },
-      },
-    });
+  updateKeywords = async (
+    page: PageDoc,
+    mergedIds: Set<string>,
+    eligibleIds: Set<string>
+  ): Promise<PageDoc> => {
+    const relation = [...mergedIds]
+      .filter((id) => eligibleIds.has(id))
+      .map((id) => ({ id }));
+    if (relation.length === 0 || relation.length >= 25) return page;
 
     const doc = await prisma.doc.update({
       where: { id: page.id },
-      data: { data },
+      data: {
+        data: await notion.pageUpdate({
+          page_id: page.id,
+          properties: { Keywords: { type: "relation", relation } },
+        }),
+      },
     });
 
     if (!isPageDoc(doc)) throw new Error("Expected page doc");

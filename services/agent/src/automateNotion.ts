@@ -14,8 +14,10 @@ import {
 import { SuggestKeywordsStrategy } from "./models/documents/strategies/SuggestKeywordsStrategy";
 import { SuggestPagesStrategy } from "./models/documents/strategies/SuggestPagesStrategy";
 import { TabulatePapersStrategy } from "./models/documents/strategies/TabulatePapersStrategy";
-import { KEYWORDS_DATABASE_ID } from "./utils/consts";
 import { RelateKeywordsStrategy } from "./models/documents/strategies/RelateKeywordsStrategy";
+import { prisma } from "./libs/prisma";
+import { isDatabaseDoc } from "./libs/notion/narrowings";
+import { uniq } from "lodash";
 
 const databaseStrategies: DatabaseStrategy[] = [];
 const pageStrategies: PageStrategy[] = [
@@ -38,11 +40,15 @@ export const automateNotion = async () => {
 const automateWorkspace = async () => {
   const databases = await notion.databaseListAll({});
 
-  for (const database of databases) {
+  for (const db of databases) {
     await withError(async () => {
-      await automateDatabase(database.id, databaseStrategies, async (pageIds) =>
-        upsertDatabase(database, { pageIds })
-      );
+      await automateDatabase(db.id, databaseStrategies, async (pageIds) => {
+        const prevDb = await prisma.doc.findUnique({ where: { id: db.id } });
+        if (prevDb && isDatabaseDoc(prevDb)) {
+          pageIds = uniq([...prevDb.metadata.pageIds, ...pageIds]);
+        }
+        return upsertDatabase(db, { pageIds });
+      });
     });
   }
 };
