@@ -12,7 +12,6 @@ import {
   PageStrategy,
 } from "./models/documents/strategies/Strategy";
 import { SuggestKeywordsStrategy } from "./models/documents/strategies/SuggestKeywordsStrategy";
-import { SuggestPagesStrategy } from "./models/documents/strategies/SuggestPagesStrategy";
 import { TabulatePapersStrategy } from "./models/documents/strategies/TabulatePapersStrategy";
 import { RelateKeywordsStrategy } from "./models/documents/strategies/RelateKeywordsStrategy";
 import { prisma } from "./libs/prisma";
