@@ -26,34 +26,46 @@ export class RelatePagesStrategy implements PageStrategy {
     await this.storeEmbeddings(note);
     if (this.shouldSkipStrategy(page)) return page;
 
+    const pages = await this.searchEmbeddings(page, note);
+
     return page;
   };
 
   searchEmbeddings = async ({ id }: PageDoc, note: Note) => {
     const [result] = await actions.embeddings.search({
       notes: [note],
-      options: { limit: 30 },
+      options: { limit: 20 },
     });
 
     const blacklist = new Set<string>([id]);
     const ids = result.metadata.embeddings_search
-      .filter(([id, score]) => !blacklist.has(id) && score > 0.7)
+      .filter(([id, score]) => !blacklist.has(id) && score > 0.8)
       .map(([id]) => id);
-    const docs = await prisma.doc.findMany({ where: { id: { in: ids } } });
+      const docs = await prisma.doc.findMany({ where: { id: { in: ids } } });
 
-    return await Promise.all(
-      docs.filter(isPageDoc).filter(async ({ id, parentId }) => {
-        if (!parentId) return false;
+    const parentIds = docs
+      .map((doc) => doc.parentId)
+      .filter(Boolean) as string[];
+    const parentDocs = await prisma.doc.findMany({
+      where: { id: { in: parentIds } },
+    });
 
-        const parent = await prisma.doc.findUnique({ where: { id: parentId } });
-        const pageIsNotArchived =
-          parent &&
-          isDatabaseDoc(parent) &&
-          parent.metadata.pageIds.includes(id);
-
-        return !!pageIsNotArchived;
-      })
+    const parentToPageIds = new Map(
+      parentDocs.filter(isDatabaseDoc).map((db) => [db.id, db.metadata.pageIds])
     );
+
+    const pageDocs = docs.filter(isPageDoc).filter(({ id, parentId }) => {
+      if (!parentId) return false;
+      const pageIds = parentToPageIds.get(parentId) || [];
+      return pageIds.includes(id);
+    });
+
+    const embeddingsMap = new Map(result.metadata.embeddings_search);
+    return pageDocs.sort((a, b) => {
+      const aScore = embeddingsMap.get(a.id) || 0;
+      const bScore = embeddingsMap.get(b.id) || 0;
+      return bScore - aScore;
+    });
   };
 
   storeEmbeddings = async (note: Note) => {
