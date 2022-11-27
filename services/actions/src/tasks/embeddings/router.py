@@ -38,14 +38,14 @@ class SearchBody(BaseModel):
 @embeddings_router.post("/search")
 async def search(body: SearchBody):
     limit = body.options["limit"]
-    items = embeddings.items()
 
+    keys = embeddings.keys()
     for note in body.notes:
         doc = create_cleaned_doc(extract_note_text(note))
         similarities: list[tuple[str, float]] = []
 
-        for key, value in items:
-            similarities.append((key, doc.similarity(value)))
+        for key in keys:
+            similarities.append((key, doc.similarity(embeddings[key])))
 
         if note["metadata"] is None:
             note["metadata"] = {}

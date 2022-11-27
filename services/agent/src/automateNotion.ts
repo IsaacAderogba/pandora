@@ -22,8 +22,8 @@ import { RelatePagesStrategy } from "./models/documents/strategies/RelatePagesSt
 
 const databaseStrategies: DatabaseStrategy[] = [];
 const pageStrategies: PageStrategy[] = [
-  // new SuggestKeywordsStrategy(),
-  // new RelateKeywordsStrategy(),
+  new SuggestKeywordsStrategy(),
+  new RelateKeywordsStrategy(),
   new RelatePagesStrategy(),
   // new SuggestPagesStrategy(),
   // new TabulatePapersStrategy(),

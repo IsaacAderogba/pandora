@@ -76,9 +76,14 @@ export const $pageStatus = (
   }
 };
 
-export const $pageRelation = (page: PageObjectResponse, relation: string) => {
-  const prop = page.properties[relation];
+export const $pageRelation = (page: PageObjectResponse, property: string) => {
+  const prop = page.properties[property];
   return prop?.type === "relation" ? prop.relation : [];
+};
+
+export const $pageRichTextProp = (page: PageObjectResponse, property: string) => {
+  const prop = page.properties[property];
+  return prop?.type === "rich_text" ? prop.rich_text : [];
 };
 
 // comment selectors

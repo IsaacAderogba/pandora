@@ -6,6 +6,8 @@ import {
   createSection,
   createSentence,
 } from "../../../libs/actions/utils";
+import { RichTextRequest } from "../../../libs/notion/blocks";
+import { notion } from "../../../libs/notion/client";
 import {
   isBlockDoc,
   isDatabaseDoc,
@@ -13,35 +15,86 @@ import {
 } from "../../../libs/notion/narrowings";
 import {
   $blockText,
+  $mentions,
+  $pageRichTextProp,
   $pageStatus,
   $pageTitle,
 } from "../../../libs/notion/selectors";
 import { BlockDoc, PageDoc } from "../../../libs/notion/types";
 import { prisma } from "../../../libs/prisma";
+import { upsertPage } from "../page";
 import { PageStrategy } from "./Strategy";
 
 export class RelatePagesStrategy implements PageStrategy {
+  key = "Related";
+
   run: PageStrategy["run"] = async (_, page) => {
     const note = this.prepareNote(page, await this.loadText(page));
     await this.storeEmbeddings(note);
     if (this.shouldSkipStrategy(page)) return page;
 
     const pages = await this.searchEmbeddings(page, note);
+    if (this.relationsHaventChanged(page, pages)) return page;
 
-    return page;
+    const request = await this.prepareRequest(pages);
+    return this.upsertPage(page, request);
+  };
+
+  upsertPage = async (page: PageDoc, request: RichTextRequest[]) => {
+    const data = await notion.pageUpdate({
+      page_id: page.id,
+      properties: {
+        [this.key]: { rich_text: request },
+      },
+    });
+
+    return await upsertPage(data, page.metadata, page.parentId!);
+  };
+
+  prepareRequest = async (pages: PageDoc[]) => {
+    const remoteIds: string[] = [];
+
+    for (const doc of pages) {
+      try {
+        const page = await notion.pageRetrieve({ page_id: doc.id });
+        if (page) remoteIds.push(page.id);
+      } catch {
+        // no op if page can't be retrieved (likely means archived)
+      }
+    }
+
+    const richTexts: RichTextRequest[] = remoteIds.flatMap((id, i, arr) => {
+      if (i === arr.length - 1) return [{ mention: { page: { id } } }];
+      return [{ mention: { page: { id } } }, { text: { content: " · " } }];
+    });
+
+    return richTexts;
+  };
+
+  relationsHaventChanged = (page: PageDoc, pages: PageDoc[]) => {
+    const prevRelated = $pageRichTextProp(page.data, this.key);
+
+    const extractedIds = new Set(pages.map((page) => page.id));
+    const existingIds = new Set($mentions(prevRelated));
+
+    for (const id of extractedIds) {
+      if (!existingIds.has(id)) return false;
+    }
+
+    return true;
   };
 
   searchEmbeddings = async ({ id }: PageDoc, note: Note) => {
     const [result] = await actions.embeddings.search({
       notes: [note],
-      options: { limit: 20 },
+      options: { limit: 25 },
     });
 
     const blacklist = new Set<string>([id]);
     const ids = result.metadata.embeddings_search
       .filter(([id, score]) => !blacklist.has(id) && score > 0.8)
       .map(([id]) => id);
-      const docs = await prisma.doc.findMany({ where: { id: { in: ids } } });
+    const docs = await prisma.doc.findMany({ where: { id: { in: ids } } });
 
     const parentIds = docs
       .map((doc) => doc.parentId)
@@ -61,11 +114,13 @@ export class RelatePagesStrategy implements PageStrategy {
     });
 
     const embeddingsMap = new Map(result.metadata.embeddings_search);
-    return pageDocs.sort((a, b) => {
-      const aScore = embeddingsMap.get(a.id) || 0;
-      const bScore = embeddingsMap.get(b.id) || 0;
-      return bScore - aScore;
-    });
+    return pageDocs
+      .sort((a, b) => {
+        const aScore = embeddingsMap.get(a.id) || 0;
+        const bScore = embeddingsMap.get(b.id) || 0;
+        return bScore - aScore;
+      })
+      .slice(0, 5);
   };
 
   storeEmbeddings = async (note: Note) => {
@@ -82,7 +137,7 @@ export class RelatePagesStrategy implements PageStrategy {
           where: { id: { in: db.metadata.pageIds } },
         });
 
-        for (const pages of chunk(results.filter(isPageDoc), 20)) {
+        for (const pages of chunk(results.filter(isPageDoc), 25)) {
           const notes = await Promise.all(
             pages.map(async (page) => {
               return this.prepareNote(page, await this.loadText(page));
@@ -122,7 +177,7 @@ export class RelatePagesStrategy implements PageStrategy {
   };
 
   shouldSkipStrategy = ({ data }: PageDoc): boolean => {
-    if (!data.properties["Related"]) return true;
+    if (!data.properties[this.key]) return true;
     if ($pageStatus(data)?.status?.name !== "Done") return true;
     return false;
   };
