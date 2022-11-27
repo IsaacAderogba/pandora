@@ -15,10 +15,12 @@ import { SuggestKeywordsStrategy } from "./models/documents/strategies/SuggestKe
 import { SuggestPagesStrategy } from "./models/documents/strategies/SuggestPagesStrategy";
 import { TabulatePapersStrategy } from "./models/documents/strategies/TabulatePapersStrategy";
 import { KEYWORDS_DATABASE_ID } from "./utils/consts";
+import { RelateKeywordsStrategy } from "./models/documents/strategies/RelateKeywordsStrategy";
 
 const databaseStrategies: DatabaseStrategy[] = [];
 const pageStrategies: PageStrategy[] = [
   new SuggestKeywordsStrategy(),
+  new RelateKeywordsStrategy(),
   // new SuggestPagesStrategy(),
   // new TabulatePapersStrategy(),
 ];
