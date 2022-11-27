@@ -19,6 +19,7 @@ export class RelateKeywordsStrategy implements PageStrategy {
   loadedKeywords: Map<string, string> = new Map();
 
   run: PageStrategy["run"] = async (_, page) => {
+    if (!page.data.properties["Keywords"]) return page;
     await this.loadKeywords();
 
     if (page.parentId === KEYWORDS_DATABASE_ID) {
@@ -45,7 +46,7 @@ export class RelateKeywordsStrategy implements PageStrategy {
     });
 
     for (const keyword of keywords.filter(isPageDoc)) {
-      this.loadedKeywords.set(keyword.id, keyword.title);
+      this.loadedKeywords.set(keyword.id, keyword.title.toLowerCase());
     }
   };
 
@@ -76,7 +77,7 @@ export class RelateKeywordsStrategy implements PageStrategy {
     if (!isDatabaseDoc(keywordsDb)) return { extractedIds, eligibleIds };
 
     keywordsDb.metadata.pageIds.forEach((id) => eligibleIds.add(id));
-    const joinedText = text.join(" ");
+    const joinedText = text.join(" ").toLowerCase();
 
     for (const [id, keywordText] of this.loadedKeywords) {
       if (!eligibleIds.has(id)) continue;
