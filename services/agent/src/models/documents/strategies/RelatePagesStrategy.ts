@@ -22,13 +22,41 @@ import { PageStrategy } from "./Strategy";
 
 export class RelatePagesStrategy implements PageStrategy {
   run: PageStrategy["run"] = async (_, page) => {
-    await this.storeEmbeddings(page);
+    const note = this.prepareNote(page, await this.loadText(page));
+    await this.storeEmbeddings(note);
     if (this.shouldSkipStrategy(page)) return page;
 
     return page;
   };
 
-  storeEmbeddings = async (page: PageDoc) => {
+  searchEmbeddings = async ({ id }: PageDoc, note: Note) => {
+    const [result] = await actions.embeddings.search({
+      notes: [note],
+      options: { limit: 30 },
+    });
+
+    const blacklist = new Set<string>([id]);
+    const ids = result.metadata.embeddings_search
+      .filter(([id, score]) => !blacklist.has(id) && score > 0.7)
+      .map(([id]) => id);
+    const docs = await prisma.doc.findMany({ where: { id: { in: ids } } });
+
+    return await Promise.all(
+      docs.filter(isPageDoc).filter(async ({ id, parentId }) => {
+        if (!parentId) return false;
+
+        const parent = await prisma.doc.findUnique({ where: { id: parentId } });
+        const pageIsNotArchived =
+          parent &&
+          isDatabaseDoc(parent) &&
+          parent.metadata.pageIds.includes(id);
+
+        return !!pageIsNotArchived;
+      })
+    );
+  };
+
+  storeEmbeddings = async (note: Note) => {
     const key = "embeddings:initialized";
     const initialized = await actions.cache.get<boolean>(key);
 
@@ -56,9 +84,7 @@ export class RelatePagesStrategy implements PageStrategy {
       await actions.cache.set(key, true);
     }
 
-    await actions.embeddings.store({
-      notes: [this.prepareNote(page, await this.loadText(page))],
-    });
+    await actions.embeddings.store({ notes: [note] });
   };
 
   prepareNote = (page: PageDoc, docs: string[]): Note => {
