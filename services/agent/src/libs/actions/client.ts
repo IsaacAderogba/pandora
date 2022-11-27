@@ -3,6 +3,10 @@ import { requestWithRetry } from "../../utils/request";
 import {
   CacheGetResult,
   CacheSetResult,
+  EmbeddingsSearchBody,
+  EmbeddingsSearchResult,
+  EmbeddingsStoreBody,
+  EmbeddingsStoreResult,
   ExtractionKeywordsBody,
   ExtractionKeywordsResult,
   RankingTextRankBody,
@@ -85,6 +89,25 @@ class Actions {
 
   private cacheGet = async <T>(key: string): Promise<CacheGetResult<T>> => {
     return this.getWithRetry(`/cache/get/${key}`, {});
+  };
+
+  get embeddings() {
+    return {
+      store: this.embeddingsStore,
+      search: this.embeddingsSearch,
+    };
+  }
+
+  private embeddingsStore = async (
+    body: EmbeddingsStoreBody
+  ): Promise<EmbeddingsStoreResult> => {
+    return this.postWithRetry("/embeddings/store", body);
+  };
+
+  private embeddingsSearch = async (
+    body: EmbeddingsSearchBody
+  ): Promise<EmbeddingsSearchResult> => {
+    return this.postWithRetry("/embeddings/search", body);
   };
 
   private getWithRetry = async <T, K>(path: string, params: K): Promise<T> => {

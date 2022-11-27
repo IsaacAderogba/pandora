@@ -51,6 +51,6 @@ async def search(body: SearchBody):
             note["metadata"] = {}
 
         sorted_similarities = sorted(similarities, key=lambda item: -item[1])
-        note["metadata"]["embeddings_score"] = sorted_similarities[:limit]
+        note["metadata"]["embeddings_search"] = sorted_similarities[:limit]
 
     return body.notes

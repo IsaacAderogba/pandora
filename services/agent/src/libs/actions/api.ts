@@ -50,5 +50,20 @@ export type CacheSetBody<T> = {
 };
 
 export type CacheSetResult<T> = T;
-
 export type CacheGetResult<T> = T | null;
+
+export type EmbeddingsStoreBody = {
+  notes: Note[];
+};
+export type EmbeddingsStoreResult = boolean;
+
+export type EmbeddingsSearchBody = {
+  notes: Note[];
+  options: {
+    limit: number;
+  };
+};
+
+export type EmbeddingsSearchResult = Note<{
+  embeddings_search: [string, number][];
+}>[];
