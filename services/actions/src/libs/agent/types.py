@@ -1,6 +1,6 @@
 from typing import Any, List, Union, Literal, TypedDict, Optional
 
-Id = Union[str, int]
+Id = str
 
 Color = Union[
     Literal["default"],
