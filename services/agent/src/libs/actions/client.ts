@@ -1,6 +1,8 @@
 import axios from "axios";
 import { requestWithRetry } from "../../utils/request";
 import {
+  CacheGetResult,
+  CacheSetResult,
   ExtractionKeywordsBody,
   ExtractionKeywordsResult,
   RankingTextRankBody,
@@ -28,7 +30,7 @@ class Actions {
   private extractionKeywords = async (
     body: ExtractionKeywordsBody
   ): Promise<ExtractionKeywordsResult> => {
-    return this.postRequest("/extraction/keywords", body);
+    return this.postWithRetry("/extraction/keywords", body);
   };
 
   get ranking() {
@@ -40,7 +42,7 @@ class Actions {
   private rankingTextrank = async (
     body: RankingTextRankBody
   ): Promise<RankingTextRankResult> => {
-    return this.postRequest("/ranking/textrank", body);
+    return this.postWithRetry("/ranking/textrank", body);
   };
 
   get summarization() {
@@ -52,7 +54,7 @@ class Actions {
   private summarizationExtractive = async (
     body: SummarizationExtractiveBody
   ): Promise<SummarizationExtractiveResult> => {
-    return this.postRequest("/summarization/extractive", body);
+    return this.postWithRetry("/summarization/extractive", body);
   };
 
   get similarity() {
@@ -64,10 +66,35 @@ class Actions {
   private similarityCosine = async (
     body: SimilarityCosineBody
   ): Promise<SimilarityCosineResult> => {
-    return this.postRequest("/similarity/cosine", body);
+    return this.postWithRetry("/similarity/cosine", body);
   };
 
-  private postRequest = async <T, K>(path: string, body: K): Promise<T> => {
+  get cache() {
+    return {
+      set: this.cacheSet,
+      get: this.cacheGet,
+    };
+  }
+
+  private cacheSet = async <T>(
+    key: string,
+    value: T
+  ): Promise<CacheSetResult<T>> => {
+    return this.postWithRetry(`/cache/set/${key}`, { value });
+  };
+
+  private cacheGet = async <T>(key: string): Promise<CacheGetResult<T>> => {
+    return this.getWithRetry(`/cache/get/${key}`, {});
+  };
+
+  private getWithRetry = async <T, K>(path: string, params: K): Promise<T> => {
+    return requestWithRetry<T>(async () => {
+      const { data } = await this.client.get<T>(path, { params });
+      return data;
+    });
+  };
+
+  private postWithRetry = async <T, K>(path: string, body: K): Promise<T> => {
     return requestWithRetry<T>(async () => {
       const { data } = await this.client.post<T>(path, body);
       return data;

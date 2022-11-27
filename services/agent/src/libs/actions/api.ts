@@ -43,3 +43,12 @@ export type SimilarityCosineResult = Note<
   { similarity_cosine: number },
   { similarity_cosine: number }
 >[];
+
+export type CacheSetBody<T> = {
+  key: string;
+  value: T;
+};
+
+export type CacheSetResult<T> = T;
+
+export type CacheGetResult<T> = T | null;
