@@ -1,4 +1,5 @@
 import spacy
+from spacy.tokens import DocBin
 import re
 import pytextrank
 

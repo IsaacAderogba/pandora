@@ -1,14 +1,27 @@
+import os
+import glob
+from pathlib import Path
 from typing import TypedDict
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from src.libs.spacy.nlp import create_cleaned_doc
+from src.libs.spacy.nlp import create_cleaned_doc, nlp
 from src.libs.spacy.types import Doc
 from src.utils.text import extract_note_text
 from src.libs.agent.types import Note
 
 
-embeddings: dict[str, Doc] = {}
+def get_embeddings_path(filename: str):
+    return os.path.join(
+        os.getcwd(),
+        "src",
+        "tasks",
+        "embeddings",
+        "__pandora__",
+        filename,
+    )
+
+
 embeddings_router = APIRouter()
 
 
@@ -21,7 +34,13 @@ async def store(body: StoreBody):
     for note in body.notes:
         if note["id"] != None:
             doc = create_cleaned_doc(extract_note_text(note))
-            embeddings[note["id"]] = doc
+            path = get_embeddings_path(
+                f'{note["id"]}.txt',
+            )
+
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "wb") as f:
+                f.write(doc.to_bytes(exclude=['user_data_keys', 'user_data_values']))
 
     return True
 
@@ -39,13 +58,17 @@ class SearchBody(BaseModel):
 async def search(body: SearchBody):
     limit = body.options["limit"]
 
-    keys = embeddings.keys()
+    path = get_embeddings_path('*.txt')
+    paths = glob.iglob(path)
+
     for note in body.notes:
         doc = create_cleaned_doc(extract_note_text(note))
         similarities: list[tuple[str, float]] = []
 
-        for key in keys:
-            similarities.append((key, doc.similarity(embeddings[key])))
+        for path in paths:
+            key = Path(path).stem
+            value = Doc(nlp.vocab).from_disk(path)
+            similarities.append((key, doc.similarity(value)))
 
         if note["metadata"] is None:
             note["metadata"] = {}

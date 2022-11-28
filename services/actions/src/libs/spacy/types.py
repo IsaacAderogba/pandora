@@ -1,1 +1,1 @@
-from spacy.tokens.doc import Doc
+from spacy.tokens import Doc
