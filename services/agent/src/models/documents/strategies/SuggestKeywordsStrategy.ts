@@ -85,7 +85,7 @@ export class SuggestKeywordsStrategy implements PageStrategy {
         const text = isCommentDoc(block)
           ? $commentText(block.data)
           : $blockText(block.data);
-        const sentences = [$pageTitle(page.data), ...tokenizeSentences(text)];
+        const sentences = [`${$pageTitle(page.data)}.`, ...tokenizeSentences(text)];
 
         return createSection(
           block.id,
